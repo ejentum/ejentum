@@ -277,13 +277,16 @@ Every injection contains four components:
 
 Telling a model *"find the root cause"* increases the probability of good output. Telling it *"reject any output that exhibits `symptom_treatment_bias`"* constrains an entire class of failure. One adds signal; the other removes noise. In our testing, the gap is consistent — though we have not yet published a controlled ablation isolating the two variables.
 
-### Cognitive scaffolding
+<details>
+<summary><b>Cognitive scaffolding — why we think this works</b></summary>
 
 Our working hypothesis for *why* this works at the attention level: each ability persists in the context window as a structurally distinctive token sequence that the transformer continues to reference across subsequent reasoning steps — functioning as a **persistent cognitive scaffold.**
 
 Multiple abilities create compound scaffolds where suppression signals stack and gate conditions cross-reference. This predicts — and we observe — that value compounds with task length: longer reasoning chains benefit more from scaffolding that prevents degradation.
 
 This hypothesis is consistent with our benchmark data but has not been independently validated at the attention mechanism level.
+
+</details>
 
 ### Meta-cognitive reflection
 
@@ -304,7 +307,7 @@ Every LLM reasoning failure we've catalogued maps to one of six structural dimen
 | **Abstraction** | 51 | Merges distinct categories, over-generalizes, loses resolution at classification boundaries |
 | **Metacognition** | 54 | Hallucinates without recognition, maintains uniform confidence regardless of actual reliability |
 
-The right ability is retrieved automatically via the query you provide. No manual dimension selection.
+The right ability is retrieved automatically via the query you provide. No manual dimension selection. The full catalog of all 311 abilities is browsable at [ejentum.com](https://ejentum.com).
 
 ### The 3-litmus-test
 
