@@ -32,18 +32,11 @@ curl -X POST "https://ejentum-main-ab125c3.zuplo.app/logicv1/" \
 
 ---
 
-## What Gets Injected
+## How It Works
 
-Each ability is a **20-field cognitive protocol** — not a prompt template. The injection payload contains:
+Each ability is a **structured cognitive protocol** — not a prompt template, not a text snippet.
 
-| Field | Purpose |
-|---|---|
-| `prompt_override` | 5-step procedural scaffold with explicit suppression directives |
-| `graph_payload` | 4 control surfaces: amplification, suppression, cognitive_style, reasoning_elasticity |
-| `reasoning_topology` | Machine-readable DAG encoding how the ability executes (S-nodes, G-gates, M-nodes) |
-| `synergies` | Directed graph edges: `requires`, `enhances`, `fallback` |
-| `suppression` | Named failure modes to block (e.g., `symptom_treatment_bias`, `surface_level_stop`) |
-| `falsification_test` | Verification criterion — how to check if the ability was actually applied |
+Every injection contains procedural scaffolding, suppression directives that block known failure modes, a reasoning topology that encodes execution structure, and a falsification test to verify the ability was actually applied.
 
 **The asymmetry principle:** Suppression is multiplicative; amplification is additive. Telling a model *"never treat correlation as causation"* eliminates an entire class of failure. Telling it *"find the root cause"* only increases the probability.
 
@@ -51,40 +44,26 @@ Each ability is a **20-field cognitive protocol** — not a prompt template. The
 
 ## 311 Abilities Across 6 Reasoning Dimensions
 
-Every reasoning failure maps to one of six dimensions. Abilities are retrieved via hybrid dense+sparse vector search — no manual dimension selection.
+Every reasoning failure maps to one of six dimensions. The right ability is retrieved automatically — no manual dimension selection.
 
-| Dimension | Count | Failure Addressed | Example Ability |
-|---|---|---|---|
-| **Causality** | 52 | Direction-of-causation errors, correlation-as-causation | CA-007 Bayesian Updater, CA-031 Root Cause Miner |
-| **Temporal** | 51 | Timeline confabulation, sequence reversal, temporal leakage | TE-003 Causality Enforcer, TE-004 Deadlock Breaker |
-| **Spatial** | 51 | Topology violations, boundary failures, physical impossibilities | SP-001 Topology Validator, SP-006 Containment Auditor |
-| **Simulation** | 52 | Counterfactual collapse, model-reality gap, hypothesis failure | SI-008 Multi-Agent Synergy Optimizer, SI-041 EVI Simulator |
-| **Abstraction** | 51 | Category collapse, over-generalization, semantic blur | AB-005 Invariant Sentinel, AB-019 Ontological Boundary Guard |
-| **Metacognition** | 54 | Hallucination spirals, bias blindness, confidence miscalibration | MC-016 Cognitive Mode Switcher, MC-004 Confidence Calibrator |
+| Dimension | Count | Failure Addressed |
+|---|---|---|
+| **Causality** | 52 | Direction-of-causation errors, correlation-as-causation |
+| **Temporal** | 51 | Timeline confabulation, sequence reversal, temporal leakage |
+| **Spatial** | 51 | Topology violations, boundary failures, physical impossibilities |
+| **Simulation** | 52 | Counterfactual collapse, model-reality gap, hypothesis failure |
+| **Abstraction** | 51 | Category collapse, over-generalization, semantic blur |
+| **Metacognition** | 54 | Hallucination spirals, bias blindness, confidence miscalibration |
 
-**Quality standard:** Every ability passes a 3-litmus-test — it must be a cognitive operation (not domain knowledge), LLM-executable (no external tools), and domain-agnostic (works across subject areas). 96 of 311 (31%) were rewritten during purification to meet this bar.
+**Quality standard:** Every ability passes a 3-litmus-test — it must be a cognitive operation (not domain knowledge), LLM-executable (no external tools), and domain-agnostic (works across subject areas).
 
 ---
 
 ## Reasoning Topology
 
-Each ability carries a DAG (directed acyclic graph) that encodes its execution structure using three node types:
+Each ability carries an embedded execution graph — not just instructions, but a structured reasoning procedure the model follows.
 
-- **S-nodes** — Sequential action steps
-- **G-gates** — Decision checkpoints that branch execution
-- **M-nodes** — Meta-cognitive reflection points where the LLM can pause, observe its own reasoning, and abandon the graph for freeform reflection before re-entering
-
-84 of 311 abilities (27%) include M-nodes. These are the abilities that give the model explicit permission to stop and ask *"is my approach actually working?"*
-
-**23 topology types** organized into 5 families:
-
-| Family | Function | Examples |
-|---|---|---|
-| Control Flow | How execution moves | Gated Pipeline, Conditional Branch, Fork-Join Compare |
-| Structural | How information is organized | Accumulate-Classify-Decide, Convergence Funnel, Chain of Custody Audit |
-| Verification | How truth is tested | Bidirectional Verification, Adversarial Self-Attack, Constraint Net |
-| Reference Frame | How perspective is managed | Abstraction Climb-and-Descend, Dialectical Spiral |
-| Meta-Level | How reasoning monitors itself | Watchdog Monitor, Emergence Detection |
+Some abilities include **meta-cognitive reflection points** that give the model explicit permission to pause, observe whether its approach is working, and change course mid-reasoning. This is the difference between "follow these steps" and "follow these steps, but stop if they're not working and rethink."
 
 ---
 
@@ -113,10 +92,10 @@ Tested against **Claude Opus 4.6** (frontier model with extended chain-of-though
 
 | Mode | Abilities | What You Get | Payload Size |
 |---|---|---|---|
-| **Single** (Ki) | 1 | Pure signal: suppression + amplification + cognitive style + falsification test | ~2,000 chars |
-| **Multi** (Haki) | 4 | PRIMARY + DEPENDENCY + AMPLIFIER + ALTERNATIVE with compound suppression and merged vectors | ~4,000 chars |
+| **Single** (Ki) | 1 | Best-match ability for your task — pure signal, minimal tokens | ~2,000 chars |
+| **Multi** (Haki) | 4 | Synergy chain with compound suppression across complementary abilities | ~4,000 chars |
 
-Multi-mode retrieves 4 abilities that work together: the best match, its prerequisite, a reinforcing ability, and a competing analytical lens. Suppression vectors are deduplicated and merged across all four.
+Multi-mode retrieves 4 abilities that work together: the best match, its prerequisite, a reinforcing ability, and a competing analytical lens. Suppression signals are deduplicated and merged across all four.
 
 ---
 
@@ -156,20 +135,13 @@ Validated failure patterns across 15 verticals with specific ability mappings:
 
 ---
 
-## Architecture
+## API Properties
 
-```
-Client → Zuplo Gateway (Cloudflare edge) → n8n Orchestrator → Qdrant Vector DB
-              ↓                                    ↓                    ↓
-         Auth + Rate Limit              Gemini Embedding 2        agent_logic_v2_gemini
-         DDoS Protection               (3072 dimensions)         Hybrid dense + sparse
-         Request Logging                Branch: single/multi     311 ability collection
-```
-
-- **Zero LLM inference cost** for retrieval — embeddings only
-- **Rate limit:** 100 req/min per key (429 + Retry-After on exceed)
-- **Graceful degradation:** if API is unreachable, agent continues on native reasoning
+- **Zero LLM inference cost** for retrieval — no model calls on our side
+- **Rate limit:** 100 req/min per key
+- **Graceful degradation:** if API is unreachable, your agent continues on native reasoning
 - **Versioning:** `/logicv1/` schema guaranteed stable; additive changes only; 12-month minimum support after v2
+- **Edge-delivered** with DDoS protection and request-level authentication
 
 ---
 
@@ -195,8 +167,6 @@ Client → Zuplo Gateway (Cloudflare edge) → n8n Orchestrator → Qdrant Vecto
 ---
 
 <div align="center">
-
-**Built with** `Qdrant` · `Gemini Embeddings` · `n8n` · `Zuplo` · `Cloudflare` · `TypeScript` · `React`
 
 Based in Greece
 
