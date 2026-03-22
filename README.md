@@ -14,7 +14,7 @@
 
 LLM failures in production are not information problems — they are **structural reasoning problems.** Models reverse causality, confabulate timelines, collapse categories, and hallucinate without self-awareness. These failures persist regardless of how much context you retrieve.
 
-RAG solves the information gap. Nothing solves the reasoning gap. That's what we built.
+RAG solves the information gap. The reasoning gap remains structurally unaddressed. That's what we built for.
 
 ## What is RA²R?
 
@@ -25,7 +25,7 @@ RAG solves the information gap. Nothing solves the reasoning gap. That's what we
 | **Retrieves** | Documents, facts, context | Reasoning procedures, suppression signals, cognitive scaffolds |
 | **Augments** | What the model *knows* | How the model *thinks* |
 | **Payload** | Variable (chunks) | ~200 tokens (structured protocol) |
-| **Integration** | Embedding + vector DB for your data | One API call — we handle retrieval |
+| **Integration** | Embedding + vector DB for your data | One API call — no data infrastructure needed |
 
 ```bash
 curl -X POST "https://ejentum-main-ab125c3.zuplo.app/logicv1/" \
@@ -33,6 +33,8 @@ curl -X POST "https://ejentum-main-ab125c3.zuplo.app/logicv1/" \
   -H "Content-Type: application/json" \
   -d '{"query": "your task description", "mode": "single"}'
 ```
+
+The response returns a pre-rendered injection string containing the reasoning scaffold, suppression directives, execution topology, and falsification test. Inject it into your agent's context before the task prompt — that's the entire integration.
 
 ---
 
@@ -43,7 +45,7 @@ curl -X POST "https://ejentum-main-ab125c3.zuplo.app/logicv1/" \
 **Without injection:**
 > *"The conversion rate likely dropped due to several factors including user interface changes, loading speed issues, and potential bugs in the new checkout flow. I recommend A/B testing the old and new designs to identify the specific cause."*
 
-Lists plausible guesses. No causal mechanism. No falsifiable claim.
+Lists plausible guesses. No causal mechanism. No falsifiable claim. *(Illustrative example from documentation)*
 
 **With RA²R injection:**
 > *"Isolating root cause. The checkout redesign introduced mandatory account creation — the most significant change in the deployment diff. Prior analytics show guest checkout accounted for the majority of conversions. Mechanism: mandatory account creation added a friction barrier at the conversion-critical step. I need to verify: does the percentage of users who previously used guest checkout correlate with the 40% drop? If yes, this is the primary cause. If not, I should look at secondary factors. I am suppressing the impulse to list multiple surface-level factors and instead tracing one causal chain to its root."*
@@ -58,9 +60,9 @@ Each of 311 abilities is a **structured cognitive protocol** — not a prompt te
 
 Every injection contains: a procedural scaffold the model follows step-by-step, suppression directives that block named failure modes, an execution graph that encodes reasoning structure, and a falsification test to verify the ability was actually applied.
 
-**The core mechanism:** Each ability persists in the context window as a structurally distinctive token sequence. The transformer's attention mechanism continues to reference it across subsequent reasoning steps — functioning as a **persistent cognitive scaffold** that prevents reasoning degradation over extended chains. Multiple abilities create compound scaffolds where suppression signals stack and gate conditions cross-reference.
+**The core mechanism:** Each ability persists in the context window as a structurally distinctive token sequence. Our working hypothesis is that the transformer's attention mechanism continues to reference it across subsequent reasoning steps — functioning as a **persistent cognitive scaffold** that prevents reasoning degradation over extended chains. Multiple abilities create compound scaffolds where suppression signals stack and gate conditions cross-reference. This is consistent with our benchmark data but not yet independently validated at the attention level.
 
-**Why suppression matters more than amplification:** Telling a model *"find the root cause"* increases the probability of good output. Telling it *"reject any output that exhibits `symptom_treatment_bias`"* eliminates an entire class of failure. One adds signal; the other removes noise. In our testing, the gap is consistent.
+**Why suppression matters more than amplification:** Telling a model *"find the root cause"* increases the probability of good output. Telling it *"reject any output that exhibits `symptom_treatment_bias`"* constrains an entire class of failure. One adds signal; the other removes noise. In our testing, the gap is consistent.
 
 ---
 
@@ -91,11 +93,11 @@ All results below are from internal evaluation against **Claude Opus 4.6** — a
 
 140 tasks across 7 behavioral signals, tested under 3 conditions: no injection (A), single-injection (B), multi-injection (C).
 
-| Signal | Baseline | With Injection | Delta |
+| Signal | Baseline (A) | Single (B) | Multi (C) |
 |---|---|---|---|
-| **Structure** (organized multi-step reasoning) | 0.588 | 0.812 | **+22.5%** |
-| **Precision** (correct formulas, quantified claims) | 0.735 | 0.762 | +2.8% |
-| **Epistemic behavior** (multi-framework reasoning) | — | B: -4.4% / C: +1.9% | Recovery pattern |
+| **Structure** (organized multi-step reasoning) | 0.588 | 0.800 (+0.213) | **0.812 (+0.225)** |
+| **Precision** (correct formulas, quantified claims) | 0.735 | 0.762 (+0.028) | 0.762 (+0.028) |
+| **Epistemic behavior** (multi-framework reasoning) | baseline | -0.044 (narrows) | **+0.019 (recovers)** |
 
 Key finding: **Single-injection narrows the model onto one analytical framework** (tunnel vision). Multi-injection recovers breadth through competing suppression signals. This pattern replicated across two independent blind evaluations.
 
@@ -121,14 +123,18 @@ We publish our limitations because we take the work seriously.
 
 ## Injection Modes
 
-| Mode | Abilities Retrieved | Use Case | Payload |
-|---|---|---|---|
-| **Single** | 1 | Direct tasks with a clear reasoning requirement | ~2,000 chars |
-| **Multi** | 4 | Complex tasks requiring multiple analytical lenses | ~4,000 chars |
+| Mode | Plan | Abilities Retrieved | Use Case | Payload |
+|---|---|---|---|---|
+| **Single** | Ki | 1 | Direct tasks with a clear reasoning requirement | ~2,000 chars |
+| **Multi** | Haki | 4 | Complex tasks requiring multiple analytical lenses | ~4,000 chars |
 
 Multi-mode retrieves four abilities that work together: the best match for your query, its prerequisite, a reinforcing ability, and a competing analytical lens. Suppression signals are deduplicated across all four.
 
-**When to use which:** Start with single. If your tasks involve multi-dimensional reasoning where tunnel vision is a risk, switch to multi.
+**When to use which:** Start with single (Ki). If your tasks involve multi-dimensional reasoning where tunnel vision is a risk, switch to multi (Haki).
+
+**Delivery matters:** In our evaluation, delivering abilities as tool results (at the moment of task execution) produced a +7.0 point lift over injecting the same abilities into the system prompt. The model integrates reasoning scaffolds more effectively when they arrive at the point of peak relevance.
+
+**Multi-turn agents:** Re-inject per turn. In conversations beyond ~5 turns, the scaffold from turn 1 has degraded from the model's active attention. Re-injection is required, not optional.
 
 ---
 
@@ -155,7 +161,7 @@ Each vertical has specific documented failure patterns (e.g., temporal leakage i
 
 ## Pricing
 
-| | Free | Lite | Pro | Enterprise |
+| | Free | Ki | Haki | Enterprise |
 |---|---|---|---|---|
 | **Price** | Free | €10/mo | €20/mo | Custom |
 | **Calls** | 100 total | 10,000/mo | 100,000/mo | Custom |
