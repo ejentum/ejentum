@@ -1,13 +1,6 @@
 <div align="center">
 
-<img src="https://github.com/ejentum.png" width="160" />
-
-# ejentum
-
-**Cognitive Infrastructure for Agentic AI**
-
-LLMs predict tokens. They don't reason.<br/>
-We inject structured reasoning abilities into any AI agent at runtime.
+<img src="ejentum_banner.png" width="100%" />
 
 [![Website](https://img.shields.io/badge/ejentum.com-0B1121?style=for-the-badge&logo=googlechrome&logoColor=3b82f6)](https://ejentum.com)
 [![API](https://img.shields.io/badge/RA²R_API-0B1121?style=for-the-badge&logo=lightning&logoColor=f59e0b)](https://ejentum.com)
