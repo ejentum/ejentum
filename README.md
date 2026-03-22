@@ -10,6 +10,12 @@
 
 ---
 
+## The Problem
+
+LLM failures in production are not information problems — they are **structural reasoning problems.** Models reverse causality, confabulate timelines, collapse categories, and hallucinate without self-awareness. These failures persist regardless of how much context you retrieve.
+
+RAG solves the information gap. Nothing solves the reasoning gap. That's what we built.
+
 ## What is RA²R?
 
 **Reasoning Ability-Augmented Retrieval** retrieves cognitive operations — not information — and injects them into an LLM's context at inference time.
@@ -19,9 +25,7 @@
 | **Retrieves** | Documents, facts, context | Reasoning procedures, suppression signals, cognitive scaffolds |
 | **Augments** | What the model *knows* | How the model *thinks* |
 | **Payload** | Variable (chunks) | ~200 tokens (structured protocol) |
-| **Requires** | Embedding + vector DB for your data | One API call — we handle retrieval |
-
-One call. No fine-tuning. No model changes. No prompt engineering.
+| **Integration** | Embedding + vector DB for your data | One API call — we handle retrieval |
 
 ```bash
 curl -X POST "https://ejentum-main-ab125c3.zuplo.app/logicv1/" \
@@ -32,137 +36,143 @@ curl -X POST "https://ejentum-main-ab125c3.zuplo.app/logicv1/" \
 
 ---
 
+## What Changes in Practice
+
+**Query:** *"Why did our conversion rate drop 40% after the checkout redesign?"*
+
+**Without injection:**
+> *"The conversion rate likely dropped due to several factors including user interface changes, loading speed issues, and potential bugs in the new checkout flow. I recommend A/B testing the old and new designs to identify the specific cause."*
+
+Lists plausible guesses. No causal mechanism. No falsifiable claim.
+
+**With RA²R injection:**
+> *"Isolating root cause. The checkout redesign introduced mandatory account creation — the most significant change in the deployment diff. Prior analytics show guest checkout accounted for the majority of conversions. Mechanism: mandatory account creation added a friction barrier at the conversion-critical step. I need to verify: does the percentage of users who previously used guest checkout correlate with the 40% drop? If yes, this is the primary cause. If not, I should look at secondary factors. I am suppressing the impulse to list multiple surface-level factors and instead tracing one causal chain to its root."*
+
+Traces a single causal chain. Identifies a mechanism. States what would falsify it. Explicitly suppresses the tendency to list surface-level factors.
+
+---
+
 ## How It Works
 
-Each ability is a **structured cognitive protocol** — not a prompt template, not a text snippet.
+Each of 311 abilities is a **structured cognitive protocol** — not a prompt template.
 
-Every injection contains procedural scaffolding, suppression directives that block known failure modes, a reasoning topology that encodes execution structure, and a falsification test to verify the ability was actually applied.
+Every injection contains: a procedural scaffold the model follows step-by-step, suppression directives that block named failure modes, an execution graph that encodes reasoning structure, and a falsification test to verify the ability was actually applied.
 
-**The asymmetry principle:** Suppression is multiplicative; amplification is additive. Telling a model *"never treat correlation as causation"* eliminates an entire class of failure. Telling it *"find the root cause"* only increases the probability.
+**The core mechanism:** Each ability persists in the context window as a structurally distinctive token sequence. The transformer's attention mechanism continues to reference it across subsequent reasoning steps — functioning as a **persistent cognitive scaffold** that prevents reasoning degradation over extended chains. Multiple abilities create compound scaffolds where suppression signals stack and gate conditions cross-reference.
+
+**Why suppression matters more than amplification:** Telling a model *"find the root cause"* increases the probability of good output. Telling it *"reject any output that exhibits `symptom_treatment_bias`"* eliminates an entire class of failure. One adds signal; the other removes noise. In our testing, the gap is consistent.
 
 ---
 
 ## 311 Abilities Across 6 Reasoning Dimensions
 
-Every reasoning failure maps to one of six dimensions. The right ability is retrieved automatically — no manual dimension selection.
+Every LLM reasoning failure maps to one of six dimensions. Each dimension targets a specific structural failure mode:
 
-| Dimension | Count | Failure Addressed |
+| Dimension | Count | Structural Failure |
 |---|---|---|
-| **Causality** | 52 | Direction-of-causation errors, correlation-as-causation |
-| **Temporal** | 51 | Timeline confabulation, sequence reversal, temporal leakage |
-| **Spatial** | 51 | Topology violations, boundary failures, physical impossibilities |
-| **Simulation** | 52 | Counterfactual collapse, model-reality gap, hypothesis failure |
-| **Abstraction** | 51 | Category collapse, over-generalization, semantic blur |
-| **Metacognition** | 54 | Hallucination spirals, bias blindness, confidence miscalibration |
+| **Causality** | 52 | Reverses causal direction, treats correlation as causation, stops at surface-level explanations |
+| **Temporal** | 51 | Confabulates timelines, reverses event sequences, leaks future data into past analysis |
+| **Spatial** | 51 | Violates physical constraints, ignores topology, produces impossible configurations |
+| **Simulation** | 52 | Drifts counterfactuals back toward training distribution, collapses hypothesis spaces prematurely |
+| **Abstraction** | 51 | Merges distinct categories, over-generalizes, loses resolution at classification boundaries |
+| **Metacognition** | 54 | Hallucinates without recognition, maintains uniform confidence regardless of actual reliability |
 
-**Quality standard:** Every ability passes a 3-litmus-test — it must be a cognitive operation (not domain knowledge), LLM-executable (no external tools), and domain-agnostic (works across subject areas).
+The right ability is retrieved automatically via the query you provide. No manual selection.
 
----
-
-## Reasoning Topology
-
-Each ability carries an embedded execution graph — not just instructions, but a structured reasoning procedure the model follows.
-
-Some abilities include **meta-cognitive reflection points** that give the model explicit permission to pause, observe whether its approach is working, and change course mid-reasoning. This is the difference between "follow these steps" and "follow these steps, but stop if they're not working and rethink."
+**Quality standard:** Every ability passes three tests — it must be a cognitive operation (not domain knowledge), LLM-executable (no external tools required), and domain-agnostic (applicable across subject areas without modification).
 
 ---
 
 ## Measured Results
 
-Tested against **Claude Opus 4.6** (frontier model with extended chain-of-thought). RA²R improved a model that already reasons well.
+All results below are from internal evaluation against **Claude Opus 4.6** — a frontier model with extended chain-of-thought. We improved a model that already reasons well.
 
-| Benchmark | Tasks | Result |
-|---|---|---|
-| BIG-Bench Hard + MuSR + CausalBench | 110 tasks, blind evaluation | **+7.1pp** correctness (69.7% → 76.8%) |
-| Multi-step abductive reasoning | Hardest subset | **20% → 60%** correctness |
-| Beyond-Reasoning Benchmark | 140 tasks × 3 conditions | **+22.5%** structure signal (multi-injection) |
-| Reasoning Topology Blind Eval | 5 professional domains | **+7.8 points** mean on 40-point scale (+25.7%) |
-| Independent Validation (v6) | 5 new domains, no hints | **+7.0 lift**, 5/5 domain wins |
-| M-node Impact (MC-016) | Metacognitive task | **+17 point** improvement |
-| Tool delivery vs system prompt | Same abilities, different delivery | **+7.0 lift** for tool-based delivery |
+### Beyond-Reasoning Benchmark (strongest evidence)
 
-**Honest boundaries:**
-- External peer review pending
-- Cross-model validation in progress (current testing on Claude Opus 4.6 only)
-- Suppression reduces failure rates — it does not guarantee zero failures
+140 tasks across 7 behavioral signals, tested under 3 conditions: no injection (A), single-injection (B), multi-injection (C).
+
+| Signal | Baseline | With Injection | Delta |
+|---|---|---|---|
+| **Structure** (organized multi-step reasoning) | 0.588 | 0.812 | **+22.5%** |
+| **Precision** (correct formulas, quantified claims) | 0.735 | 0.762 | +2.8% |
+| **Epistemic behavior** (multi-framework reasoning) | — | B: -4.4% / C: +1.9% | Recovery pattern |
+
+Key finding: **Single-injection narrows the model onto one analytical framework** (tunnel vision). Multi-injection recovers breadth through competing suppression signals. This pattern replicated across two independent blind evaluations.
+
+### Hard Reasoning Tasks
+
+110 tasks from BIG-Bench Hard, MuSR, and CausalBench in two-stage blind evaluation:
+
+| Metric | Result |
+|---|---|
+| Overall correctness | **+7.1pp** (69.7% → 76.8%) |
+| Hardest subset (multi-step abductive reasoning) | **20% → 60%** |
+
+### What we haven't proven yet
+
+- **Cross-model validation.** Current testing is on Claude Opus 4.6 only. Multi-model benchmarks are in progress.
+- **External peer review.** All evidence is generated internally. Independent replication is pending.
+- **Suppression vs. amplification ablation.** We observe that suppression outperforms amplification consistently, but we have not published a controlled ablation isolating the two.
+- **Head-to-head vs. well-crafted system prompts.** We have not benchmarked RA²R against optimized hand-written prompts on the same task set.
+
+We publish our limitations because we take the work seriously.
 
 ---
 
 ## Injection Modes
 
-| Mode | Abilities | What You Get | Payload Size |
+| Mode | Abilities Retrieved | Use Case | Payload |
 |---|---|---|---|
-| **Single** (Ki) | 1 | Best-match ability for your task — pure signal, minimal tokens | ~2,000 chars |
-| **Multi** (Haki) | 4 | Synergy chain with compound suppression across complementary abilities | ~4,000 chars |
+| **Single** | 1 | Direct tasks with a clear reasoning requirement | ~2,000 chars |
+| **Multi** | 4 | Complex tasks requiring multiple analytical lenses | ~4,000 chars |
 
-Multi-mode retrieves 4 abilities that work together: the best match, its prerequisite, a reinforcing ability, and a competing analytical lens. Suppression signals are deduplicated and merged across all four.
+Multi-mode retrieves four abilities that work together: the best match for your query, its prerequisite, a reinforcing ability, and a competing analytical lens. Suppression signals are deduplicated across all four.
 
----
-
-## Industry Applications
-
-Validated failure patterns across 15 verticals with specific ability mappings:
-
-<table>
-<tr>
-<td width="33%"><b>Software Engineering</b><br/><sub>32 connected abilities — forward-scanning stops, cross-service dependency tracing, review completeness</sub></td>
-<td width="33%"><b>Financial Services</b><br/><sub>30 abilities — temporal leakage in backtests, correlation-as-causation in credit models, censored data bias</sub></td>
-<td width="33%"><b>Legal Tech</b><br/><sub>23 abilities — normative vs descriptive confusion, jurisdictional semantic drift, contradictory obligations</sub></td>
-</tr>
-<tr>
-<td><b>Healthcare</b><br/><sub>30 abilities — mutually exclusive symptoms, contraindication gaps, dosage interaction modeling</sub></td>
-<td><b>Multi-Agent Systems</b><br/><sub>27 abilities — local optimization blindness, inter-agent trust, error propagation through swarms</sub></td>
-<td><b>Cybersecurity</b><br/><sub>27 abilities — premature attack surface enumeration, defensive-only perspective, static threat models</sub></td>
-</tr>
-<tr>
-<td><b>RAG & Retrieval</b><br/><sub>27 abilities — semantic drift between query and docs, equal retrieval effort allocation, multi-hop drift</sub></td>
-<td><b>Logistics</b><br/><sub>26 abilities — clearance violations, container nesting, shared dock allocation conflicts</sub></td>
-<td><b>Autonomous Research</b><br/><sub>25 abilities — confirmation bias, citation authority fallacy, unidentified confounds</sub></td>
-</tr>
-</table>
-
-<details>
-<summary>More verticals</summary>
-
-- **Customer Service** (24 abilities) — surface-level issue acceptance, premature resolution
-- **Algorithmic Trading** (30 abilities) — indicator reversal, survivorship bias, nonlinear slippage
-- **Manufacturing & Digital Twins** (26 abilities) — conservation law violations, coupled variable independence
-- **Insurance & Actuarial** (29 abilities) — tail risk collapse, adverse selection, catastrophe correlation
-- **Life Sciences** (29 abilities) — publication bias, binding-to-therapeutic conflation, subpopulation harm
-- **Robotics** (25 abilities) — boundary integrity, inertia-ignoring trajectories, multi-robot deadlocks
-
-</details>
+**When to use which:** Start with single. If your tasks involve multi-dimensional reasoning where tunnel vision is a risk, switch to multi.
 
 ---
 
-## API Properties
+## Applicable Domains
 
-- **Zero LLM inference cost** for retrieval — no model calls on our side
+RA²R abilities are domain-agnostic by design — they encode reasoning procedures, not domain knowledge. We have documented failure patterns and ability mappings across 15 verticals:
+
+Software Engineering · Financial Services · Legal Tech · Healthcare · Multi-Agent Orchestration · Cybersecurity · RAG & Retrieval Systems · Logistics & Supply Chain · Customer Service · Algorithmic Trading · Manufacturing & Digital Twins · Insurance & Actuarial · Life Sciences · Autonomous Research · Robotics
+
+Each vertical has specific documented failure patterns (e.g., temporal leakage in backtesting, causal reversal in root-cause analysis, category collapse in medical diagnosis) with corresponding ability chains. Full documentation at [ejentum.com](https://ejentum.com).
+
+---
+
+## API
+
+- **One endpoint:** `POST /logicv1/`
+- **Zero LLM inference cost** on our side — retrieval only
 - **Rate limit:** 100 req/min per key
 - **Graceful degradation:** if API is unreachable, your agent continues on native reasoning
-- **Versioning:** `/logicv1/` schema guaranteed stable; additive changes only; 12-month minimum support after v2
+- **Schema stability:** `/logicv1/` guaranteed stable with additive changes only; 12-month minimum support window after any new version
 - **Edge-delivered** with DDoS protection and request-level authentication
 
 ---
 
 ## Pricing
 
-| | Free | Ki (Lite) | Haki (Pro) | Enterprise |
+| | Free | Lite | Pro | Enterprise |
 |---|---|---|---|---|
 | **Price** | Free | €10/mo | €20/mo | Custom |
 | **Calls** | 100 total | 10,000/mo | 100,000/mo | Custom |
 | **Mode** | Single | Single | Single + Multi | All |
-| **Rate** | — | 100 req/min | 100 req/min | Custom |
-| **Card Required** | No | Yes | Yes | — |
+| **Rate** | — | 100/min | 100/min | Custom |
+
+No card required for free tier. Start testing in 30 seconds.
 
 ---
 
 ## What Ejentum Is Not
 
-- **Not a prompt library.** Each ability is a 20-field structured protocol with topology, not a text snippet.
-- **Not a knowledge base.** We don't add domain facts — use RAG for information retrieval.
-- **Not model-level.** No weights, activations, or fine-tuning. Operates entirely at the prompt layer.
-- **Not a guarantee.** LLMs are probabilistic. Suppression reduces failure rates; it doesn't eliminate them.
+- **Not a prompt library.** Each ability is a structured protocol with execution topology, not a text snippet you copy-paste.
+- **Not a knowledge base.** We do not add domain facts. Use RAG for information retrieval; use RA²R for reasoning structure.
+- **Not model-level.** No weights, activations, or fine-tuning. We operate entirely at the context layer.
+- **Not a guarantee.** LLMs are probabilistic. Suppression reduces failure rates; it does not eliminate them.
+- **Not magic.** Retrieval precision depends on query quality. Vague queries produce vague results.
 
 ---
 
