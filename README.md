@@ -31,19 +31,244 @@ RAG solves the information gap. The reasoning gap remains structurally unaddress
 
 ---
 
+## Integration
+
+### API
+
+```bash
+curl -X POST "https://ejentum-main-ab125c3.zuplo.app/logicv1/" \
+  -H "Authorization: Bearer YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "your task description", "mode": "single"}'
+```
+
+The response returns a pre-rendered injection string. Inject it into your agent's context before the task prompt — that's the entire integration.
+
+- **One endpoint:** `POST /logicv1/`
+- **Zero LLM inference cost** on our side — retrieval only
+- **Rate limit:** 100 req/min per key
+- **Graceful degradation:** if API is unreachable, your agent continues on native reasoning
+- **Schema stability:** additive changes only; 12-month minimum support window after any new version
+- **Edge-delivered** with DDoS protection and request-level authentication
+
+### Framework examples
+
+<details>
+<summary><b>LangChain (Python)</b></summary>
+
+```python
+import requests
+from langchain_core.runnables import RunnablePassthrough
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+
+EJENTUM_URL = "https://ejentum-main-ab125c3.zuplo.app/logicv1/"
+EJENTUM_KEY = "YOUR_API_KEY"
+
+def get_reasoning_injection(task: str, mode: str = "single") -> str:
+    try:
+        response = requests.post(
+            EJENTUM_URL,
+            headers={
+                "Authorization": f"Bearer {EJENTUM_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={"query": task, "mode": mode},
+            timeout=2
+        )
+        response.raise_for_status()
+        data = response.json()
+        return f"[REASONING CONTEXT]\n{data[0][f'{mode}_logic']}\n[END REASONING CONTEXT]"
+    except (requests.RequestException, KeyError, IndexError):
+        return ""  # Graceful degradation
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "{reasoning_context}\n\nYou are a senior analyst."),
+    ("human", "{task}")
+])
+
+chain = (
+    RunnablePassthrough.assign(
+        reasoning_context=lambda x: get_reasoning_injection(x["task"])
+    )
+    | prompt
+    | ChatOpenAI(model="gpt-4")
+)
+
+result = chain.invoke({"task": "Why did our supply chain costs spike in Q3?"})
+```
+
+</details>
+
+<details>
+<summary><b>CrewAI</b></summary>
+
+```python
+from crewai import Agent, Task, Crew
+
+injection = get_reasoning_injection("Analyze root cause of production failures")
+
+analyst = Agent(
+    role="Production Analyst",
+    goal="Identify the root cause of system failures",
+    backstory=f"You are a production analyst.\n\n{injection}",
+    llm=your_llm
+)
+```
+
+In CrewAI, `backstory` is the system message. For multi-step crews, inject per task — each task may need a different reasoning dimension:
+
+```python
+tasks = [
+    {"description": "Identify why production failed", "agent": analyst},     # → Causal
+    {"description": "Estimate recovery timeline", "agent": planner},         # → Temporal
+    {"description": "Draft incident report", "agent": writer}               # → Abstract
+]
+
+for task in tasks:
+    injection = get_reasoning_injection(task["description"])
+    task["agent"].backstory = f"{task['agent'].base_backstory}\n\n{injection}"
+```
+
+</details>
+
+<details>
+<summary><b>AutoGen</b></summary>
+
+```python
+import autogen
+
+def get_ejentum_system_message(task: str, base_message: str, mode: str = "single") -> str:
+    try:
+        response = requests.post(
+            "https://ejentum-main-ab125c3.zuplo.app/logicv1/",
+            headers={
+                "Authorization": "Bearer YOUR_API_KEY",
+                "Content-Type": "application/json"
+            },
+            json={"query": task, "mode": mode},
+            timeout=2
+        )
+        response.raise_for_status()
+        data = response.json()
+        injection = data[0][f"{mode}_logic"]
+        return f"[REASONING CONTEXT]\n{injection}\n[END REASONING CONTEXT]\n\n{base_message}"
+    except (requests.RequestException, KeyError, IndexError):
+        return base_message
+
+assistant = autogen.AssistantAgent(
+    name="analyst",
+    system_message=get_ejentum_system_message(
+        "Investigate why model accuracy degrades after retraining",
+        "You are a senior ML engineer."
+    )
+)
+```
+
+</details>
+
+<details>
+<summary><b>Anthropic Claude (tool_use)</b></summary>
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()
+
+injection = get_reasoning_injection(
+    "Evaluate tradeoffs between microservice and monolith architecture"
+)
+
+response = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=4096,
+    system=f"{injection}\n\nYou are a senior software architect.",
+    messages=[
+        {"role": "user", "content": "Should we split the billing service?"}
+    ]
+)
+```
+
+</details>
+
+<details>
+<summary><b>n8n</b></summary>
+
+```
+Webhook Trigger → HTTP Request (POST /logicv1/) → Set Node (extract injection) → AI Agent Node
+```
+
+**Set Node** extraction: `{{ $json[0].single_logic }}`
+
+**AI Agent system message:**
+```
+[REASONING CONTEXT]
+{{ $json.injection }}
+[END REASONING CONTEXT]
+
+You are a senior analyst.
+```
+
+</details>
+
+### Injection modes
+
+| Mode | Plan | Abilities | Use Case | Payload |
+|---|---|---|---|---|
+| **Single** | Ki | 1 | Direct tasks with a clear reasoning requirement | ~2,000 chars |
+| **Multi** | Haki | 4 | Complex tasks requiring multiple analytical lenses | ~4,000 chars |
+
+Multi (Haki) retrieves four abilities that work together: the best match for your query, its prerequisite, a reinforcing ability, and a competing analytical lens. Suppression signals are deduplicated across all four.
+
+Start with Ki. Switch to Haki if your tasks involve multi-dimensional reasoning where single-framework tunnel vision is a risk.
+
+### Delivery guidance
+
+**Tool delivery > system prompt.** In our evaluation, delivering abilities as tool results (at the moment of task execution) produced a +7.0 point lift over injecting the same content into the system prompt. System prompts are processed once at conversation start and decay in attention over subsequent turns. Tool results arrive at the point of peak relevance — when the model is actively working on the task.
+
+**Multi-turn agents:** Re-inject per turn. In conversations beyond ~5 turns, the scaffold from turn 1 has degraded from the model's active attention. Re-injection is not optional.
+
+---
+
 ## What Changes in Practice
+
+### Causality: Root cause isolation
 
 **Query:** *"Why did our conversion rate drop 40% after the checkout redesign?"*
 
 **Without injection:**
 > *"The conversion rate likely dropped due to several factors including user interface changes, loading speed issues, and potential bugs in the new checkout flow. I recommend A/B testing the old and new designs to identify the specific cause."*
 
-Lists plausible guesses. No causal mechanism. No falsifiable claim. *(Illustrative example from documentation)*
+Lists plausible guesses. No causal mechanism. No falsifiable claim.
 
 **With RA²R injection:**
 > *"Isolating root cause. The checkout redesign introduced mandatory account creation — the most significant change in the deployment diff. Prior analytics show guest checkout accounted for the majority of conversions. Mechanism: mandatory account creation added a friction barrier at the conversion-critical step. I need to verify: does the percentage of users who previously used guest checkout correlate with the 40% drop? If yes, this is the primary cause. If not, I should look at secondary factors. I am suppressing the impulse to list multiple surface-level factors and instead tracing one causal chain to its root."*
 
-Traces a single causal chain. Identifies a verifiable mechanism. States what would falsify it. Explicitly suppresses the tendency to list surface-level factors.
+Traces a single causal chain. Identifies a verifiable mechanism. States what would falsify it. *(Illustrative example from documentation)*
+
+### Spatial: Gradient reasoning over static snapshots
+
+**Without injection:**
+> *"Disk usage is at 78% — we still have 22% headroom, so no action needed until it actually fills up."*
+
+Treats the current value as sufficient. No projection. Reactive.
+
+**With RA²R injection:**
+> *"Project the breach: disk grew from 60% to 78% in 30 days, crossing 95% in approximately 28 days at this rate. Flag now — waiting for the limit means reactive firefighting. Schedule cleanup or capacity expansion before the threshold breach."*
+
+Reasons about the slope, not just the position. Converts a static snapshot into a trajectory. *(From cognitive delta evaluation, SP-035 Threshold Breach Predictor)*
+
+### Temporal: Delay anomaly detection
+
+**Without injection:**
+> *"The user clicked submit and the order appeared in the warehouse system 3 seconds later — that's normal propagation."*
+
+Accepts the timing at face value.
+
+**With RA²R injection:**
+> *"Diagnose the timing: submit-to-warehouse normally takes 200ms via the event bus. A 3-second delay is 15x the expected propagation. Something absorbed 2.8 seconds — check queue depth, serialization overhead, and network partitions between the services."*
+
+Flags the anomaly against expected baseline. Decomposes the gap into investigable components. *(From cognitive delta evaluation, TE-007 Delay Anomaly Detector)*
 
 ---
 
@@ -114,7 +339,7 @@ All results below are from internal evaluation against **Claude Opus 4.6** — a
 |---|---|---|---|
 | **Structure** (organized multi-step reasoning) | 0.588 | 0.800 (+0.213) | **0.812 (+0.225)** |
 | **Precision** (correct formulas, quantified claims) | 0.735 | 0.762 (+0.028) | 0.762 (+0.028) |
-| **Epistemic behavior** (multi-framework reasoning) | baseline | -0.044 (narrows) | **+0.019 (recovers)** |
+| **Epistemic behavior** (multi-framework reasoning) | 0.000 (reference) | -0.044 (narrows) | **+0.019 (recovers)** |
 
 Key finding: **single-injection narrows the model onto one analytical framework** (tunnel vision). Multi-injection recovers breadth through competing suppression signals. This pattern replicated across two independent blind evaluations.
 
@@ -140,55 +365,6 @@ We publish our limitations because the work deserves to be evaluated on what it 
 
 ---
 
-## Integration
-
-### API
-
-```bash
-curl -X POST "https://ejentum-main-ab125c3.zuplo.app/logicv1/" \
-  -H "Authorization: Bearer YOUR_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "your task description", "mode": "single"}'
-```
-
-The response returns a pre-rendered injection string. Inject it into your agent's context before the task prompt — that's the entire integration.
-
-- **One endpoint:** `POST /logicv1/`
-- **Zero LLM inference cost** on our side — retrieval only
-- **Rate limit:** 100 req/min per key
-- **Graceful degradation:** if API is unreachable, your agent continues on native reasoning
-- **Schema stability:** additive changes only; 12-month minimum support window after any new version
-- **Edge-delivered** with DDoS protection and request-level authentication
-
-### Injection modes
-
-| Mode | Plan | Abilities | Use Case | Payload |
-|---|---|---|---|---|
-| **Single** | Ki | 1 | Direct tasks with a clear reasoning requirement | ~2,000 chars |
-| **Multi** | Haki | 4 | Complex tasks requiring multiple analytical lenses | ~4,000 chars |
-
-Multi (Haki) retrieves four abilities that work together: the best match for your query, its prerequisite, a reinforcing ability, and a competing analytical lens. Suppression signals are deduplicated across all four.
-
-Start with Ki. Switch to Haki if your tasks involve multi-dimensional reasoning where single-framework tunnel vision is a risk.
-
-### Delivery guidance
-
-**Tool delivery > system prompt.** In our evaluation, delivering abilities as tool results (at the moment of task execution) produced a +7.0 point lift over injecting the same content into the system prompt. System prompts are processed once at conversation start and decay in attention over subsequent turns. Tool results arrive at the point of peak relevance — when the model is actively working on the task.
-
-**Multi-turn agents:** Re-inject per turn. In conversations beyond ~5 turns, the scaffold from turn 1 has degraded from the model's active attention. Re-injection is not optional.
-
-### Measuring impact on your workload
-
-We recommend a controlled evaluation before committing:
-
-1. Run 50–100 representative tasks through your agent without injection
-2. Run the same tasks with RA²R injection
-3. Compare: task completion rate, reasoning chain quality (LLM-as-judge or human review), token cost per task
-
-The delta is your ROI signal. If the improvement on your specific workload doesn't justify the cost, you'll know before paying.
-
----
-
 ## Pricing
 
 | | Free | Ki | Haki | Enterprise |
@@ -199,6 +375,16 @@ The delta is your ROI signal. If the improvement on your specific workload doesn
 | **Rate** | — | 100/min | 100/min | Custom |
 
 No card required for free tier.
+
+### Measuring impact on your workload
+
+We recommend a controlled evaluation before committing:
+
+1. Run 50–100 representative tasks through your agent without injection
+2. Run the same tasks with RA²R injection
+3. Compare: task completion rate, reasoning chain quality (LLM-as-judge or human review), token cost per task
+
+The delta is your ROI signal. If the improvement on your specific workload doesn't justify the cost, you'll know before paying.
 
 ---
 
