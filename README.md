@@ -26,7 +26,7 @@ RAG solves the information gap. The reasoning gap remains structurally unaddress
 |---|---|---|
 | **Retrieves** | Documents, facts, context | Reasoning procedures, suppression signals, cognitive scaffolds |
 | **Augments** | What the model *knows* | How the model *thinks* |
-| **Payload** | Variable (chunks) | ~200 tokens (structured protocol) |
+| **Payload** | Variable (chunks) | ~500–1,000 tokens (structured protocol) |
 | **Integration** | Embedding + vector DB for your data | One API call — no data infrastructure needed |
 
 ---
