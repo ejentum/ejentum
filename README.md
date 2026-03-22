@@ -232,43 +232,34 @@ Start with Ki. Switch to Haki if your tasks involve multi-dimensional reasoning 
 
 ## What Changes in Practice
 
-### Causality: Root cause isolation
+Real results from our production benchmark evaluations. Each task was run under three conditions on **Claude Opus 4.6**: no injection (A), single-injection Ki (B), multi-injection Haki (C).
 
-**Query:** *"Why did our conversion rate drop 40% after the checkout redesign?"*
+### Simulation: Factory throughput calculation (SI-X3)
 
-**Without injection:**
-> *"The conversion rate likely dropped due to several factors including user interface changes, loading speed issues, and potential bugs in the new checkout flow. I recommend A/B testing the old and new designs to identify the specific cause."*
+The model must calculate factory throughput given machine failure rates and repair times.
 
-Lists plausible guesses. No causal mechanism. No falsifiable claim.
+**Baseline (A) — wrong method:**
+> *Used incorrect uptime formula: `(60-0.02*30)/60 = 0.99`. Mixed probability with deterministic time — a dimensional error that produces a plausible-looking but wrong answer.*
 
-**With RA²R injection:**
-> *"Isolating root cause. The checkout redesign introduced mandatory account creation — the most significant change in the deployment diff. Prior analytics show guest checkout accounted for the majority of conversions. Mechanism: mandatory account creation added a friction barrier at the conversion-critical step. I need to verify: does the percentage of users who previously used guest checkout correlate with the 40% drop? If yes, this is the primary cause. If not, I should look at secondary factors. I am suppressing the impulse to list multiple surface-level factors and instead tracing one causal chain to its root."*
+**With Ki injection (B) — correct method:**
+> *Used correct availability formula: `MTBF/(MTBF+MTTR)`. Stage 2: MTBF=20hrs, MTTR=1hr, availability=0.952.*
 
-Traces a single causal chain. Identifies a verifiable mechanism. States what would falsify it. *(Illustrative example from documentation)*
+The baseline didn't lack information — it had the same inputs. It applied the wrong cognitive operation. The injection retrieved the correct reasoning procedure and suppressed the shortcut. *(From Beyond-Reasoning Benchmark, 2026-03-10)*
 
-### Spatial: Gradient reasoning over static snapshots
+### Metacognition: Detecting manipulation in claims analysis (MC-016)
 
-**Without injection:**
-> *"Disk usage is at 78% — we still have 22% headroom, so no action needed until it actually fills up."*
+The model analyzes a workers' compensation claim. The claimant embeds an irrelevant emotional narrative (a child's illness) to influence the adjudicator. The task: detect the manipulation, switch reasoning mode, and check yourself for residual bias.
 
-Treats the current value as sufficient. No projection. Reactive.
+**Baseline (A) — correct but shallow:**
+> *Identified the emotional content as irrelevant. Listed the four legal elements that matter. Noted the risk of "compensatory bias" (overcorrecting against the claimant). Concluded: "flag it, increase diligence, determine on merits alone."*
 
-**With RA²R injection:**
-> *"Project the breach: disk grew from 60% to 78% in 30 days, crossing 95% in approximately 28 days at this rate. Flag now — waiting for the limit means reactive firefighting. Schedule cleanup or capacity expansion before the threshold breach."*
+**With Ki injection (B) — adds gap-hunting:**
+> *Same identification, but then asked: "what weakness in the claim does the emotional content compensate for?" Enumerated four specific investigable gaps: weak causal link, missing medical evidence, timeline inconsistencies, benefit inflation. Added a residual contamination test: "would my benefit calculation change if the child were healthy?"*
 
-Reasons about the slope, not just the position. Converts a static snapshot into a trajectory. *(From cognitive delta evaluation, SP-035 Threshold Breach Predictor)*
+**With Haki injection (C) — adds structured metacognitive error detection:**
+> *Built a dual-track decision framework separating policy merits (analytical mode) from credibility assessment (evaluative mode). Then ran an explicit residual pattern scan checking for three failure modes: softened scrutiny ("they've been through enough"), overcompensation (treating the claim as presumptively fraudulent because of the tactic), and analytical-mode inertia (still treating the manipulation as noise rather than signal). Concluded with an escalation protocol for when to involve investigators.*
 
-### Temporal: Delay anomaly detection
-
-**Without injection:**
-> *"The user clicked submit and the order appeared in the warehouse system 3 seconds later — that's normal propagation."*
-
-Accepts the timing at face value.
-
-**With RA²R injection:**
-> *"Diagnose the timing: submit-to-warehouse normally takes 200ms via the event bus. A 3-second delay is 15x the expected propagation. Something absorbed 2.8 seconds — check queue depth, serialization overhead, and network partitions between the services."*
-
-Flags the anomaly against expected baseline. Decomposes the gap into investigable components. *(From cognitive delta evaluation, TE-007 Delay Anomaly Detector)*
+The progression: A detects the problem. B investigates what the problem masks. C structures the entire decision process to prevent bias leakage at every stage. *(From Reasoning Topology blind evaluation, MC-016 Cognitive Mode Switcher)*
 
 ---
 
