@@ -121,6 +121,10 @@ No card required for free tier. [Get your API key](https://ejentum.com/dashboard
 
 ---
 
+## Unexpected Findings
+
+During ARC-AGI-3 testing, the scaffolded agent spontaneously switched from natural language to symbolic mathematical notation at step 15. Nobody instructed this. The scaffold's suppression signal (`start_end_only_thinking`) constrained a failure mode, and the agent independently found a more precise reasoning modality to satisfy the constraint. Separately, the agent's queries to the Logic API improved systematically over 25 steps -- from generic ("help me reason about this game") to spatially precise ("wall barrier at x=29-33 blocks rightward movement") -- without any instruction on how to write better queries. These are emergent tool-use behaviors, not engineered features.
+
 ## Limitations
 
 - **One model family tested.** All benchmarks are on Claude (Opus 4.6 for single-turn, Sonnet 4.6 for ARC-AGI-3). Cross-model testing is planned, not completed.
