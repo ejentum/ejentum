@@ -50,7 +50,7 @@ Retrieval under 1 second. Deterministic. No LLM inference on our side. If the AP
 
 ## Measured Results
 
-Three independent benchmarks. Two-stage blind protocol: separate generation and evaluation, the judge never saw which condition produced which output. Every number below links to its source data.
+Three independent benchmarks. Two-stage blind protocol: separate generation and evaluation, the judge never saw which condition produced which output. Source data for every number is in the [benchmarks repo](https://github.com/ejentum/benchmarks).
 
 ### EjBench -- 180 custom professional tasks
 
@@ -185,7 +185,7 @@ We publish limitations because the work should be evaluated on what it demonstra
 |------|--------------|
 | **[benchmarks](https://github.com/ejentum/benchmarks)** | 2,161 files. Full reports, raw action traces, 1,390 generation outputs, 747 judgment scores, system prompts, aggregated metrics. Three benchmark suites. CC BY 4.0. |
 | **[docs](https://github.com/ejentum/docs)** | 15 documentation pages. Quickstart to advanced method. Same content as [ejentum.com/docs](https://ejentum.com/docs). |
-| **[examples](https://github.com/ejentum/examples)** | 13 runnable integration examples. Python, TypeScript, curl, MCP server, n8n workflow, skill files. MIT. |
+| **[examples](https://github.com/ejentum/examples)** | 22 integration examples. Python, TypeScript, curl, MCP server, n8n workflow, skill files, no-code guides. MIT. |
 
 ---
 
