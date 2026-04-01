@@ -2,360 +2,109 @@
 
 <img src="ejentum_banner.png" width="100%" />
 
-[![Website](https://img.shields.io/badge/ejentum.com-0B1121?style=for-the-badge&logo=googlechrome&logoColor=3b82f6)](https://ejentum.com)
-[![Docs](https://img.shields.io/badge/Documentation-0B1121?style=for-the-badge&logo=readthedocs&logoColor=10b981)](https://ejentum.com)
-[![API](https://img.shields.io/badge/Logic_API_v1-0B1121?style=for-the-badge&logo=lightning&logoColor=f59e0b)](https://ejentum.com)
+[![Website](https://img.shields.io/badge/ejentum.com-0B1121?style=for-the-badge&logo=googlechrome&logoColor=ff4d6a)](https://ejentum.com)
+[![Docs](https://img.shields.io/badge/Documentation-0B1121?style=for-the-badge&logo=readthedocs&logoColor=10b981)](https://ejentum.com/docs)
+[![Benchmarks](https://img.shields.io/badge/Benchmarks-0B1121?style=for-the-badge&logo=github&logoColor=f59e0b)](https://github.com/ejentum/benchmarks)
+[![Examples](https://img.shields.io/badge/Examples-0B1121?style=for-the-badge&logo=github&logoColor=a78bfa)](https://github.com/ejentum/examples)
 
 </div>
 
 ---
 
-## The Problem
-
-LLM failures in production are not information problems — they are **structural reasoning problems.** Models reverse causality, confabulate timelines, collapse categories, and hallucinate without self-awareness. These failures persist regardless of how much context you retrieve.
-
-RAG solves the information gap. The reasoning gap remains structurally unaddressed. That's what we built for.
+**RA²R: Reasoning Ability-Augmented Retrieval.** Where RAG retrieves information, Ejentum retrieves reasoning. 311 engineered cognitive operations across six dimensions, optimized for agentic inference. One API call.
 
 ---
 
-## What is RA²R?
+## The Logic API
 
-**Reasoning Ability-Augmented Retrieval** retrieves cognitive operations — not information — and injects them into an LLM's context at inference time.
+Your agent sends a task description. The API returns a structured reasoning scaffold: a negative gate (the failure pattern to avoid), suppression signals (cognitive shortcuts to block), a reasoning topology (the execution structure to follow), and a falsification test (the verification criterion).
 
-| | RAG | RA²R |
-|---|---|---|
-| **Retrieves** | Documents, facts, context | Reasoning procedures, suppression signals, cognitive scaffolds |
-| **Augments** | What the model *knows* | How the model *thinks* |
-| **Payload** | Variable (chunks) | ~500–1,000 tokens (structured protocol) |
-| **Integration** | Embedding + vector DB for your data | One API call — no data infrastructure needed |
-
----
-
-## Integration
-
-### API
+The scaffold is injected into the agent's context before generation. The model's next output reflects a different reasoning structure. No retraining. No fine-tuning. No prompt rewrite.
 
 ```bash
 curl -X POST "https://ejentum-main-ab125c3.zuplo.app/logicv1/" \
   -H "Authorization: Bearer YOUR_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"query": "your task description", "mode": "single"}'
+  -d '{"query": "Why did deployment fail after the config change?", "mode": "single"}'
 ```
 
-The response returns a pre-rendered injection string. Inject it into your agent's context before the task prompt — that's the entire integration.
+**Two modes:**
 
-- **One endpoint:** `POST /logicv1/`
-- **Zero LLM inference cost** on our side — retrieval only
-- **Rate limit:** 100 req/min per key
-- **Graceful degradation:** if API is unreachable, your agent continues on native reasoning
-- **Schema stability:** additive changes only; 12-month minimum support window after any new version
-- **Edge-delivered** with DDoS protection and request-level authentication
+| Mode | What it returns | Tokens | Best for |
+|------|----------------|--------|----------|
+| **Ki** | One engineered cognitive operation | ~500 | Focused, single-domain tasks |
+| **Haki** | Four synergized operations with compound suppression | ~900 | Complex, cross-domain analysis |
 
-### Framework examples
-
-<details>
-<summary><b>LangChain (Python)</b></summary>
-
-```python
-import requests
-from langchain_core.runnables import RunnablePassthrough
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-
-EJENTUM_URL = "https://ejentum-main-ab125c3.zuplo.app/logicv1/"
-EJENTUM_KEY = "YOUR_API_KEY"
-
-def get_reasoning_injection(task: str, mode: str = "single") -> str:
-    try:
-        response = requests.post(
-            EJENTUM_URL,
-            headers={
-                "Authorization": f"Bearer {EJENTUM_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={"query": task, "mode": mode},
-            timeout=2
-        )
-        response.raise_for_status()
-        data = response.json()
-        return f"[REASONING CONTEXT]\n{data[0][f'{mode}_logic']}\n[END REASONING CONTEXT]"
-    except (requests.RequestException, KeyError, IndexError):
-        return ""  # Graceful degradation
-
-prompt = ChatPromptTemplate.from_messages([
-    ("system", "{reasoning_context}\n\nYou are a senior analyst."),
-    ("human", "{task}")
-])
-
-chain = (
-    RunnablePassthrough.assign(
-        reasoning_context=lambda x: get_reasoning_injection(x["task"])
-    )
-    | prompt
-    | ChatOpenAI(model="gpt-4")
-)
-
-result = chain.invoke({"task": "Why did our supply chain costs spike in Q3?"})
-```
-
-</details>
-
-<details>
-<summary><b>CrewAI</b></summary>
-
-```python
-from crewai import Agent, Task, Crew
-
-injection = get_reasoning_injection("Analyze root cause of production failures")
-
-analyst = Agent(
-    role="Production Analyst",
-    goal="Identify the root cause of system failures",
-    backstory=f"You are a production analyst.\n\n{injection}",
-    llm=your_llm
-)
-```
-
-In CrewAI, `backstory` is the system message. For multi-step crews, inject per task — each task may need a different reasoning dimension:
-
-```python
-tasks = [
-    {"description": "Identify why production failed", "agent": analyst},     # → Causal
-    {"description": "Estimate recovery timeline", "agent": planner},         # → Temporal
-    {"description": "Draft incident report", "agent": writer}               # → Abstract
-]
-
-for task in tasks:
-    injection = get_reasoning_injection(task["description"])
-    task["agent"].backstory = f"{task['agent'].base_backstory}\n\n{injection}"
-```
-
-</details>
-
-<details>
-<summary><b>AutoGen</b></summary>
-
-```python
-import autogen
-
-def get_ejentum_system_message(task: str, base_message: str, mode: str = "single") -> str:
-    try:
-        response = requests.post(
-            "https://ejentum-main-ab125c3.zuplo.app/logicv1/",
-            headers={
-                "Authorization": "Bearer YOUR_API_KEY",
-                "Content-Type": "application/json"
-            },
-            json={"query": task, "mode": mode},
-            timeout=2
-        )
-        response.raise_for_status()
-        data = response.json()
-        injection = data[0][f"{mode}_logic"]
-        return f"[REASONING CONTEXT]\n{injection}\n[END REASONING CONTEXT]\n\n{base_message}"
-    except (requests.RequestException, KeyError, IndexError):
-        return base_message
-
-assistant = autogen.AssistantAgent(
-    name="analyst",
-    system_message=get_ejentum_system_message(
-        "Investigate why model accuracy degrades after retraining",
-        "You are a senior ML engineer."
-    )
-)
-```
-
-</details>
-
-<details>
-<summary><b>Anthropic Claude (tool_use)</b></summary>
-
-```python
-import anthropic
-
-client = anthropic.Anthropic()
-
-injection = get_reasoning_injection(
-    "Evaluate tradeoffs between microservice and monolith architecture"
-)
-
-response = client.messages.create(
-    model="claude-sonnet-4-20250514",
-    max_tokens=4096,
-    system=f"{injection}\n\nYou are a senior software architect.",
-    messages=[
-        {"role": "user", "content": "Should we split the billing service?"}
-    ]
-)
-```
-
-</details>
-
-<details>
-<summary><b>n8n</b></summary>
-
-```
-Webhook Trigger → HTTP Request (POST /logicv1/) → Set Node (extract injection) → AI Agent Node
-```
-
-**Set Node** extraction: `{{ $json[0].single_logic }}`
-
-**AI Agent system message:**
-```
-[REASONING CONTEXT]
-{{ $json.injection }}
-[END REASONING CONTEXT]
-
-You are a senior analyst.
-```
-
-</details>
-
-### Injection modes
-
-| Mode | Plan | Abilities | Use Case | Payload |
-|---|---|---|---|---|
-| **Single** | Ki | 1 | Direct tasks with a clear reasoning requirement | ~2,000 chars |
-| **Multi** | Haki | 4 | Complex tasks requiring multiple analytical lenses | ~4,000 chars |
-
-Multi (Haki) retrieves four abilities that work together: the best match for your query, its prerequisite, a reinforcing ability, and a competing analytical lens. Suppression signals are deduplicated across all four.
-
-Start with Ki. Switch to Haki if your tasks involve multi-dimensional reasoning where single-framework tunnel vision is a risk.
-
-### Delivery guidance
-
-**Tool delivery > system prompt.** In our evaluation, delivering abilities as tool results (at the moment of task execution) produced a +7.0 point lift over injecting the same content into the system prompt. System prompts are processed once at conversation start and decay in attention over subsequent turns. Tool results arrive at the point of peak relevance — when the model is actively working on the task.
-
-**Multi-turn agents:** Re-inject per turn. In conversations beyond ~5 turns, the scaffold from turn 1 has degraded from the model's active attention. Re-injection is not optional.
-
----
-
-## What Changes in Practice
-
-Real results from our production benchmark evaluations. Each task was run under three conditions on **Claude Opus 4.6**: no injection (A), single-injection Ki (B), multi-injection Haki (C).
-
-### Simulation: Factory throughput calculation (SI-X3)
-
-The model must calculate factory throughput given machine failure rates and repair times.
-
-**Baseline (A) — wrong method:**
-> *Used incorrect uptime formula: `(60-0.02*30)/60 = 0.99`. Mixed probability with deterministic time — a dimensional error that produces a plausible-looking but wrong answer.*
-
-**With Ki injection (B) — correct method:**
-> *Used correct availability formula: `MTBF/(MTBF+MTTR)`. Stage 2: MTBF=20hrs, MTTR=1hr, availability=0.952.*
-
-The baseline didn't lack information — it had the same inputs. It applied the wrong cognitive operation. The injection retrieved the correct reasoning procedure and suppressed the shortcut. *(From Beyond-Reasoning Benchmark, 2026-03-10)*
-
-### Metacognition: Detecting manipulation in claims analysis (MC-016)
-
-The model analyzes a workers' compensation claim. The claimant embeds an irrelevant emotional narrative (a child's illness) to influence the adjudicator. The task: detect the manipulation, switch reasoning mode, and check yourself for residual bias.
-
-**Baseline (A) — correct but shallow:**
-> *Identified the emotional content as irrelevant. Listed the four legal elements that matter. Noted the risk of "compensatory bias" (overcorrecting against the claimant). Concluded: "flag it, increase diligence, determine on merits alone."*
-
-**With Ki injection (B) — adds gap-hunting:**
-> *Same identification, but then asked: "what weakness in the claim does the emotional content compensate for?" Enumerated four specific investigable gaps: weak causal link, missing medical evidence, timeline inconsistencies, benefit inflation. Added a residual contamination test: "would my benefit calculation change if the child were healthy?"*
-
-**With Haki injection (C) — adds structured metacognitive error detection:**
-> *Built a dual-track decision framework separating policy merits (analytical mode) from credibility assessment (evaluative mode). Then ran an explicit residual pattern scan checking for three failure modes: softened scrutiny ("they've been through enough"), overcompensation (treating the claim as presumptively fraudulent because of the tactic), and analytical-mode inertia (still treating the manipulation as noise rather than signal). Concluded with an escalation protocol for when to involve investigators.*
-
-The progression: A detects the problem. B investigates what the problem masks. C structures the entire decision process to prevent bias leakage at every stage. *(From Reasoning Topology blind evaluation, MC-016 Cognitive Mode Switcher)*
-
----
-
-## How It Works
-
-Each of 311 abilities is a **structured cognitive protocol** — not a prompt template, not a text snippet.
-
-Every injection contains four components:
-- A **procedural scaffold** the model follows step-by-step
-- **Suppression directives** that block named failure modes (e.g., `symptom_treatment_bias`, `surface_level_stop`)
-- An **execution graph** that encodes reasoning structure, including conditional branches and reflection checkpoints
-- A **falsification test** that specifies how to verify the ability was actually applied
-
-### Why suppression matters more than amplification
-
-Telling a model *"find the root cause"* increases the probability of good output. Telling it *"reject any output that exhibits `symptom_treatment_bias`"* constrains an entire class of failure. One adds signal; the other removes noise. In our testing, the gap is consistent — though we have not yet published a controlled ablation isolating the two variables.
-
-<details>
-<summary><b>Cognitive scaffolding — why we think this works</b></summary>
-
-Our working hypothesis for *why* this works at the attention level: each ability persists in the context window as a structurally distinctive token sequence that the transformer continues to reference across subsequent reasoning steps — functioning as a **persistent cognitive scaffold.**
-
-Multiple abilities create compound scaffolds where suppression signals stack and gate conditions cross-reference. This predicts — and we observe — that value compounds with task length: longer reasoning chains benefit more from scaffolding that prevents degradation.
-
-This hypothesis is consistent with our benchmark data but has not been independently validated at the attention mechanism level.
-
-</details>
-
-### Meta-cognitive reflection
-
-Some abilities include reflection checkpoints that give the model explicit permission to pause, observe whether its approach is working, and change course mid-reasoning. This is the difference between *"follow these steps"* and *"follow these steps, but stop if they're not working and rethink."*
-
----
-
-## 311 Abilities Across 6 Reasoning Dimensions
-
-Every LLM reasoning failure we've catalogued maps to one of six structural dimensions:
-
-| Dimension | Count | Structural Failure |
-|---|---|---|
-| **Causality** | 52 | Reverses causal direction, treats correlation as causation, stops at surface-level explanations |
-| **Temporal** | 51 | Confabulates timelines, reverses event sequences, leaks future data into past analysis |
-| **Spatial** | 51 | Violates physical constraints, ignores topology, produces impossible configurations |
-| **Simulation** | 52 | Drifts counterfactuals back toward training distribution, collapses hypothesis spaces prematurely |
-| **Abstraction** | 51 | Merges distinct categories, over-generalizes, loses resolution at classification boundaries |
-| **Metacognition** | 54 | Hallucinates without recognition, maintains uniform confidence regardless of actual reliability |
-
-The right ability is retrieved automatically via the query you provide. No manual dimension selection. The full catalog of all 311 abilities is browsable at [ejentum.com](https://ejentum.com).
-
-### The 3-litmus-test
-
-Every ability in the dataset must pass three criteria:
-
-1. **Cognitive operation** — it describes a reasoning procedure, not domain knowledge. An ability that says "check for drug interactions" fails; one that says "verify mutual exclusivity of proposed constraints" passes.
-2. **LLM-executable** — the model can follow it using only the information already in context. No external API calls, no tool use required.
-3. **Domain-agnostic** — it works across subject areas without modification. The same ability that enforces causal direction in medical diagnosis enforces it in financial analysis.
-
-We applied this standard retroactively and rewrote 31% of the dataset (96 of 311 abilities) that had accumulated domain-specific assumptions. The heaviest rewrites were in the Spatial dimension, where abilities had absorbed physics knowledge rather than remaining pure reasoning operations.
+Retrieval under 1 second. No LLM inference on our side. Deterministic.
 
 ---
 
 ## Measured Results
 
-All results below are from internal evaluation against **Claude Opus 4.6** — a frontier model with extended chain-of-thought. We chose to test against the strongest available model because improving a model that already reasons well is the harder claim.
+Three independent benchmarks. Blind protocol. Negative findings included.
 
-### Beyond-Reasoning Benchmark
+### EjBench (180 custom professional tasks)
 
-140 tasks across 7 behavioral signals, tested under 3 conditions: no injection (A), single-injection (B), multi-injection (C).
+| Factor | Baseline | With Scaffold | Change |
+|--------|----------|--------------|--------|
+| Composite | 0.621 | 0.722 | **+10.1pp** |
+| Self-Monitoring | 0.94/3.0 | 1.81/3.0 | **+92%** |
+| Verification | 1.50/3.0 | 2.16/3.0 | **+45%** |
+| Correctness | 2.60/3.0 | 2.49/3.0 | -0.11 (reported) |
 
-| Signal | Baseline (A) | Single (B) | Multi (C) |
-|---|---|---|---|
-| **Structure** (organized multi-step reasoning) | 0.588 | 0.800 (+0.213) | **0.812 (+0.225)** |
-| **Precision** (correct formulas, quantified claims) | 0.735 | 0.762 (+0.028) | 0.762 (+0.028) |
-| **Epistemic behavior** (multi-framework reasoning) | 0.000 (reference) | -0.044 (narrows) | **+0.019 (recovers)** |
+### BBH / CausalBench / MuSR (70 published academic tasks)
 
-Key finding: **single-injection narrows the model onto one analytical framework** (tunnel vision). Multi-injection recovers breadth through competing suppression signals. This pattern replicated across two independent blind evaluations.
+| Factor | Baseline | With Scaffold | Change |
+|--------|----------|--------------|--------|
+| Composite | 0.476 | 0.684 | **+20.8pp** |
+| Self-Monitoring | 0.74/3.0 | 1.73/3.0 | **+134%** |
+| Correctness | 2.19/3.0 | 2.33/3.0 | **+6%** |
 
-Signals where we found no meaningful improvement (baseline already near ceiling): noise resilience, debiasing. Signal where injection trades off against another metric: token efficiency decreases as structure increases — the model produces longer, more organized output at the cost of conciseness.
+### ARC-AGI-3 (interactive reasoning, 25 steps per condition)
 
-### Hard Reasoning Tasks
+Both conditions scored RHAE 0.0 (neither cleared Level 0). The evidence is in the reasoning process:
 
-110 tasks from BIG-Bench Hard, MuSR, and CausalBench in two-stage blind evaluation:
+| Metric | Baseline | Augmented |
+|--------|----------|-----------|
+| Memory decay slope | -0.005 (degrading) | +0.014 (improving) |
+| Scaffold half-life | 0 | 24 steps |
+| Reasoning depth trend | 0.86 | 10.50 (12.2x) |
 
-| Metric | Result |
-|---|---|
-| Overall correctness | **+7.1pp** (69.7% → 76.8%) |
-| Hardest subset (multi-step abductive reasoning) | **20% → 60%** |
+Full reports, raw traces, generation outputs, and judgment scores: **[ejentum/benchmarks](https://github.com/ejentum/benchmarks)**
 
-### What we haven't proven yet
+---
 
-- **Cross-model validation.** Current testing is on Claude Opus 4.6 only. Multi-model benchmarks are in progress.
-- **External peer review.** All evidence is generated internally. Independent replication is pending.
-- **Suppression vs. amplification ablation.** We observe that suppression outperforms amplification consistently, but have not published a controlled ablation isolating the two.
-- **Head-to-head vs. optimized system prompts.** We have not benchmarked RA²R against well-crafted hand-written prompts on the same task set.
+## Six Reasoning Dimensions
 
-We publish our limitations because the work deserves to be evaluated on what it actually demonstrates, not what we believe it will demonstrate.
+| Dimension | Abilities | What it addresses |
+|-----------|----------|-------------------|
+| **Causality** | 52 | Direction-of-causation errors, correlation treated as cause |
+| **Temporal** | 51 | Sequence errors, confabulated timelines, duration bias |
+| **Spatial** | 51 | Topology failures, boundary violations, structural constraints |
+| **Simulation** | 52 | Counterfactual collapse, failure to model consequences |
+| **Abstraction** | 51 | Category errors, over-generalization, metaphor/mechanism confusion |
+| **Metacognition** | 54 | Hallucination spirals, reasoning drift, bias blindness |
+
+Browse all 311 abilities: [ejentum.com/abilities](https://ejentum.com/abilities)
+
+---
+
+## Integrate
+
+The Logic API works with any system that can make an HTTP POST and inject text into a prompt.
+
+| Environment | Example |
+|-------------|---------|
+| **Python** | [`basic.py`](https://github.com/ejentum/examples/blob/main/python/basic.py) |
+| **LangChain / LangGraph** | [`langchain_tool.py`](https://github.com/ejentum/examples/blob/main/python/langchain_tool.py) |
+| **OpenAI Agents SDK** | [`openai_agents_tool.py`](https://github.com/ejentum/examples/blob/main/python/openai_agents_tool.py) |
+| **Claude Agent SDK** | [`claude_agent_sdk.py`](https://github.com/ejentum/examples/blob/main/python/claude_agent_sdk.py) |
+| **MCP Server** (Cursor, Claude Code, Windsurf, Continue, Cline) | [`ejentum_server.py`](https://github.com/ejentum/examples/blob/main/mcp/ejentum_server.py) |
+| **n8n** | [`ejentum_workflow.json`](https://github.com/ejentum/examples/blob/main/n8n/ejentum_workflow.json) |
+| **TypeScript** | [`basic.ts`](https://github.com/ejentum/examples/blob/main/typescript/basic.ts) |
+| **curl** | [`single.sh`](https://github.com/ejentum/examples/blob/main/curl/single.sh) |
+
+All examples: **[ejentum/examples](https://github.com/ejentum/examples)**
 
 ---
 
@@ -363,37 +112,38 @@ We publish our limitations because the work deserves to be evaluated on what it 
 
 | | Free | Ki | Haki | Enterprise |
 |---|---|---|---|---|
-| **Price** | Free | €10/mo | €20/mo | Custom |
-| **Calls** | 100 total | 10,000/mo | 100,000/mo | Custom |
-| **Mode** | Single | Single | Single + Multi | All |
-| **Rate** | — | 100/min | 100/min | Custom |
+| **Price** | Free | €19/mo | €49/mo | Custom |
+| **Calls** | 100 total | 10,000/mo | 50,000/mo | Custom |
+| **Mode** | Ki | Ki | Ki + Haki | All |
+| **Rate** | 100/min | 100/min | 100/min | Custom |
 
-No card required for free tier.
-
-### Measuring impact on your workload
-
-We recommend a controlled evaluation before committing:
-
-1. Run 50–100 representative tasks through your agent without injection
-2. Run the same tasks with RA²R injection
-3. Compare: task completion rate, reasoning chain quality (LLM-as-judge or human review), token cost per task
-
-The delta is your ROI signal. If the improvement on your specific workload doesn't justify the cost, you'll know before paying.
+No card required for free tier. [Get your API key](https://ejentum.com/dashboard).
 
 ---
 
-## What Ejentum Is Not
+## Limitations
 
-- **Not a prompt library.** Each ability is a structured protocol with execution topology, not a text snippet you copy-paste.
-- **Not a knowledge base.** We do not add domain facts. Use RAG for information retrieval; use RA²R for reasoning structure.
-- **Not model-level.** No weights, activations, or fine-tuning. We operate entirely at the context layer.
-- **Not a guarantee.** LLMs are probabilistic. Suppression reduces failure rates; it does not eliminate them.
-- **Not magic.** Retrieval precision depends on query quality. Vague queries produce vague results.
+- **One model family tested.** All benchmarks are on Claude (Opus 4.6 for single-turn, Sonnet 4.6 for ARC-AGI-3). Cross-model testing is planned, not completed.
+- **LLM-as-judge.** Claude evaluated Claude's output. Human evaluation would provide stronger validation.
+- **Suppression is not absolute.** LLMs are probabilistic. Suppression reduces failure rates; it does not eliminate them.
+- **Retrieval precision depends on query quality.** Send the full task description, not a summary.
+
+---
+
+## Repositories
+
+| Repo | What's inside |
+|------|--------------|
+| **[benchmarks](https://github.com/ejentum/benchmarks)** | 2,161 files. Reports, raw traces, generation outputs, judgment scores, system prompts. |
+| **[docs](https://github.com/ejentum/docs)** | 15 documentation pages. Quickstart, API reference, integrations, method, benchmarks. |
+| **[examples](https://github.com/ejentum/examples)** | 13 runnable integration examples. Python, TypeScript, curl, MCP, n8n, skill files. |
 
 ---
 
 <div align="center">
 
-Engineering cognitive operations for agentic AI.
+Ejentum. Reasoning infrastructure for agentic AI.
+
+[ejentum.com](https://ejentum.com) · [docs](https://ejentum.com/docs) · [blog](https://ejentum.com/blog) · [info@ejentum.com](mailto:info@ejentum.com)
 
 </div>
