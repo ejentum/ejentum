@@ -124,7 +124,7 @@ No card required for free tier. [Get your API key](https://ejentum.com/dashboard
 ## Limitations
 
 - **One model family tested.** All benchmarks are on Claude (Opus 4.6 for single-turn, Sonnet 4.6 for ARC-AGI-3). Cross-model testing is planned, not completed.
-- **LLM-as-judge.** Claude evaluated Claude's output. Human evaluation would provide stronger validation.
+- **LLM-as-judge.** Two-stage blind protocol: generation and evaluation are separate. The evaluator never saw which condition produced which output. Human evaluation would provide additional validation.
 - **Suppression is not absolute.** LLMs are probabilistic. Suppression reduces failure rates; it does not eliminate them.
 - **Retrieval precision depends on query quality.** Send the full task description, not a summary.
 
