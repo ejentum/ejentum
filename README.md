@@ -7,6 +7,8 @@
 [![Benchmarks](https://img.shields.io/badge/Benchmarks-0B1121?style=for-the-badge&logo=github&logoColor=f59e0b)](https://github.com/ejentum/benchmarks)
 [![Examples](https://img.shields.io/badge/Examples-0B1121?style=for-the-badge&logo=github&logoColor=a78bfa)](https://github.com/ejentum/examples)
 [![Paper](https://img.shields.io/badge/Research_Paper-0B1121?style=for-the-badge&logo=arxiv&logoColor=e74c3c)](https://github.com/ejentum/benchmarks/blob/main/research/paper/under_pressure.pdf)
+[![Zenodo](https://img.shields.io/badge/Zenodo-10.5281%2Fzenodo.19392715-0B1121?style=for-the-badge&logo=zenodo&logoColor=1682d4)](https://doi.org/10.5281/zenodo.19392715)
+[![SSRN](https://img.shields.io/badge/SSRN-6512038-0B1121?style=for-the-badge&logo=ssrn&logoColor=154881)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6512038)
 
 </div>
 
