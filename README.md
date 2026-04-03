@@ -143,7 +143,7 @@ All examples: **[ejentum/examples](https://github.com/ejentum/examples)**
 | | Free | Ki | Haki | Enterprise |
 |---|---|---|---|---|
 | **Price** | Free | €19/mo | €49/mo | Custom |
-| **Calls** | 100 total | 10,000/mo | 50,000/mo | Custom |
+| **Calls** | 100 total | 5,000/mo | 10,000/mo | Custom |
 | **Mode** | Ki | Ki | Ki + Haki | All |
 | **Rate** | 100/min | 100/min | 100/min | Custom |
 
