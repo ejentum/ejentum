@@ -9,6 +9,7 @@
 [![Paper](https://img.shields.io/badge/Research_Paper-0B1121?style=for-the-badge&logo=arxiv&logoColor=e74c3c)](https://github.com/ejentum/benchmarks/blob/main/research/paper/under_pressure.pdf)
 [![Zenodo](https://img.shields.io/badge/Zenodo-10.5281%2Fzenodo.19392715-0B1121?style=for-the-badge&logo=zenodo&logoColor=1682d4)](https://doi.org/10.5281/zenodo.19392715)
 [![SSRN](https://img.shields.io/badge/SSRN-6512038-0B1121?style=for-the-badge&logo=ssrn&logoColor=154881)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6512038)
+[![Field Notes](https://img.shields.io/badge/Builder's_Field_Notes-0B1121?style=for-the-badge&logo=bookstack&logoColor=ff4d6a)](https://ejentum.com/docs/field_notes)
 
 </div>
 
