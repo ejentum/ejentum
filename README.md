@@ -100,7 +100,7 @@ Baseline reasoning quality collapsed over time. Augmented reasoning quality grew
 
 ### LiveCodeBench Hard -- 28 hard competitive programming tasks
 
-Hard AtCoder problems. Claude Opus 4.6 with maximum-effort extended thinking. Augmented condition used the [Logic API skill file](https://ejentum.com/docs/agent_skill) -- the same tool-use document available to all subscribers.
+The previous benchmarks tested reasoning quality. This one tests whether better reasoning produces correct code. 28 hard competitive programming tasks from AtCoder, evaluated on Claude Opus 4.6 with maximum-effort extended thinking. The augmented condition used the [Logic API skill file](https://ejentum.com/docs/agent_skill) -- the same tool-use document available to all subscribers.
 
 | Condition | Passed | Rate |
 |-----------|--------|------|
@@ -109,9 +109,11 @@ Hard AtCoder problems. Claude Opus 4.6 with maximum-effort extended thinking. Au
 
 **+14.3pp. Four tasks gained. Zero lost. Zero regressions across three independent batches.**
 
-The scaffold rescued two reasoning spirals (extended thinking consumed 600-1200 seconds without producing code), prevented one premature algorithm commitment, and corrected one precision mismatch. On the 24 tasks both conditions solved, scaffolded code was 2% more concise with 33% fewer inline comments. Every solution was different -- average token-level similarity 68.9%.
+The model's own maximum-effort thinking wasn't enough on four tasks. Two were reasoning spirals -- extended thinking consumed 600-1200 seconds and produced zero code. The scaffold's reasoning topology forced the thinking to converge. One was premature convergence -- the model accepted a first-plausible graph traversal in 11 seconds that failed on a specific topology. The scaffold's suppression signals caught it. One was a precision edge case.
 
-Read the analysis: [What We Saw When Opus Thought Harder](https://ejentum.com/blog/what-we-saw-when-opus-thought-harder). Full report: [LiveCodeBench Hard benchmark](https://ejentum.com/blog/livecodebench-hard-28-tasks).
+Every task the baseline solved, the augmented condition also solved. The scaffold changes how the model approaches every problem -- but it never breaks what already works.
+
+Read the analysis: [What We Saw When Opus Thought Harder](https://ejentum.com/blog/what-we-saw-when-opus-thought-harder). Full report and raw data: [LiveCodeBench Hard benchmark](https://ejentum.com/blog/livecodebench-hard-28-tasks). Runner script and results: [github.com/ejentum/benchmarks/lcb-hard](https://github.com/ejentum/benchmarks/tree/main/lcb-hard).
 
 Full reports, 2,161+ data files, raw traces, generation outputs, judgment scores, and system prompts: **[ejentum/benchmarks](https://github.com/ejentum/benchmarks)**
 
