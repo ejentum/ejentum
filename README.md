@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="ejentum_banner.png?v=2" width="100%" />
+<img src="ejentum_banner1.png?v=2" width="100%" />
 
 [![Website](https://img.shields.io/badge/ejentum.com-0B1121?style=for-the-badge&logo=googlechrome&logoColor=ff4d6a)](https://ejentum.com)
 [![Docs](https://img.shields.io/badge/Documentation-0B1121?style=for-the-badge&logo=readthedocs&logoColor=10b981)](https://ejentum.com/docs)
