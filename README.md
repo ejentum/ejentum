@@ -54,7 +54,7 @@ Retrieval under 1 second. Deterministic. No LLM inference on our side. If the AP
 
 ## Measured Results
 
-Three independent benchmarks. Two-stage blind protocol: separate generation and evaluation, the judge never saw which condition produced which output. Source data for every number is in the [benchmarks repo](https://github.com/ejentum/benchmarks).
+Four independent benchmarks. Two-stage blind protocol on reasoning tasks: separate generation and evaluation, the judge never saw which condition produced which output. Exact-match correctness evaluation on coding tasks. Source data for every number is in the [benchmarks repo](https://github.com/ejentum/benchmarks).
 
 ### EjBench -- 180 custom professional tasks
 
@@ -98,7 +98,22 @@ The evidence is not in game outcome. It's in what happened to the reasoning proc
 
 Baseline reasoning quality collapsed over time. Augmented reasoning quality grew. The scaffold persisted for 24 steps without re-injection. This is the strongest direct evidence for the [Cognitive Scaffolding Thesis](https://ejentum.com/blog/cognitive-scaffolding-thesis): abilities act as persistent attention anchors that compound across extended execution chains.
 
-Full reports, 2,161 data files, raw traces, generation outputs, judgment scores, and system prompts: **[ejentum/benchmarks](https://github.com/ejentum/benchmarks)**
+### LiveCodeBench Hard -- 28 hard competitive programming tasks
+
+Hard AtCoder problems. Claude Opus 4.6 with maximum-effort extended thinking. Augmented condition used the [Logic API skill file](https://ejentum.com/docs/agent_skill) -- the same tool-use document available to all subscribers.
+
+| Condition | Passed | Rate |
+|-----------|--------|------|
+| Baseline (Opus max effort) | 24/28 | 85.7% |
+| **With Logic API scaffold** | **28/28** | **100.0%** |
+
+**+14.3pp. Four tasks gained. Zero lost. Zero regressions across three independent batches.**
+
+The scaffold rescued two reasoning spirals (extended thinking consumed 600-1200 seconds without producing code), prevented one premature algorithm commitment, and corrected one precision mismatch. On the 24 tasks both conditions solved, scaffolded code was 2% more concise with 33% fewer inline comments. Every solution was different -- average token-level similarity 68.9%.
+
+Read the analysis: [What We Saw When Opus Thought Harder](https://ejentum.com/blog/what-we-saw-when-opus-thought-harder). Full report: [LiveCodeBench Hard benchmark](https://ejentum.com/blog/livecodebench-hard-28-tasks).
+
+Full reports, 2,161+ data files, raw traces, generation outputs, judgment scores, and system prompts: **[ejentum/benchmarks](https://github.com/ejentum/benchmarks)**
 
 ---
 
@@ -168,8 +183,9 @@ Read the full analysis: [What Happened When an LLM Taught Itself Symbolic Math](
 ## What We Know, What We Don't
 
 **What the data demonstrates:**
-- Structured reasoning injection produces measurable behavioral changes across three independent benchmarks, two model sizes, and both single-turn and multi-step settings.
-- The effect is primarily on reasoning quality (self-monitoring, verification, alternative consideration), not raw correctness. Correctness improved on focused external tasks (+7.1pp) and held flat on complex custom tasks.
+- Structured reasoning injection produces measurable behavioral changes across four independent benchmarks, two model sizes, and single-turn, multi-step, and code generation settings.
+- The effect is primarily on reasoning quality (self-monitoring, verification, alternative consideration), not raw correctness on reasoning tasks. Correctness improved on focused external tasks (+7.1pp) and held flat on complex custom tasks.
+- On competitive programming, the scaffold improved correctness from 85.7% to 100% by preventing reasoning spirals and premature algorithm convergence. Zero regressions.
 - Scaffolds persist across extended execution chains (half-life: 24 steps) and compound rather than decay.
 - Suppression signals work even when the retrieved ability comes from a mismatched domain (retrieval precision was 38%; improvements persisted).
 
@@ -187,7 +203,7 @@ We publish limitations because the work should be evaluated on what it demonstra
 
 | Repo | What's inside |
 |------|--------------|
-| **[benchmarks](https://github.com/ejentum/benchmarks)** | 2,161 files. Full reports, raw action traces, 1,390 generation outputs, 747 judgment scores, system prompts, aggregated metrics. Three benchmark suites. CC BY 4.0. |
+| **[benchmarks](https://github.com/ejentum/benchmarks)** | 2,161+ files. Full reports, raw action traces, 1,390 generation outputs, 747 judgment scores, system prompts, aggregated metrics. Four benchmark suites. CC BY 4.0. |
 | **[docs](https://github.com/ejentum/docs)** | 15 documentation pages. Quickstart to advanced method. Same content as [ejentum.com/docs](https://ejentum.com/docs). |
 | **[examples](https://github.com/ejentum/examples)** | 22 integration examples. Python, TypeScript, curl, MCP server, n8n workflow, skill files, no-code guides. MIT. |
 
