@@ -262,7 +262,7 @@ One REST endpoint. No SDK. Works with anything that can POST and inject text int
 | **LangChain / LangGraph** | [`langchain_tool.py`](https://github.com/ejentum/examples/blob/main/python/langchain_tool.py) |
 | **OpenAI Agents SDK** | [`openai_agents_tool.py`](https://github.com/ejentum/examples/blob/main/python/openai_agents_tool.py) |
 | **Claude Agent SDK** | [`claude_agent_sdk.py`](https://github.com/ejentum/examples/blob/main/python/claude_agent_sdk.py) |
-| **MCP Server** (Cursor, Claude Code, Windsurf, Continue, Cline) | [`ejentum_server.py`](https://github.com/ejentum/examples/blob/main/mcp/ejentum_server.py) |
+| **MCP Server** (Cursor, Claude Code, Windsurf, Continue, Cline, n8n MCP node) | [**ejentum-mcp** on Smithery](https://smithery.ai/servers/ejentum/ejentum-mcp): `npx -y @smithery/cli install ejentum/ejentum-mcp --client claude` |
 | **Skill Files** (Cursor, Windsurf, Claude Code, Codex) | [`ejentum_logic_api.md`](https://github.com/ejentum/examples/blob/main/skill-files/ejentum_logic_api.md) |
 | **n8n** | [`ejentum_workflow.json`](https://github.com/ejentum/examples/blob/main/n8n/ejentum_workflow.json) |
 | **TypeScript** | [`basic.ts`](https://github.com/ejentum/examples/blob/main/typescript/basic.ts) |
@@ -337,9 +337,12 @@ We publish limitations because the work should be evaluated on what it demonstra
 
 | Repo | What's inside |
 |------|--------------|
+| **[ejentum-mcp](https://github.com/ejentum/ejentum-mcp)** | MCP server exposing the four cognitive harnesses as MCP tools. One-click install via [Smithery](https://smithery.ai/servers/ejentum/ejentum-mcp), [Glama](https://glama.ai/mcp/servers/ejentum/ejentum-mcp), or [mcp.so](https://mcp.so/server/ejentum-mcp/Ejentum). MIT. |
+| **[agent-teams](https://github.com/ejentum/agent-teams)** | Multi-agent teams (orchestrator + specialists, each with a mode-specific harness). Adversarial code review and eval workflows shipped. MIT. |
+| **[eval](https://github.com/ejentum/eval)** | Open-source eval workflows (n8n + Python) for A/B testing tools, harnesses, prompts. Blind judges, fairness guarantees, sample results. MIT. |
 | **[benchmarks](https://github.com/ejentum/benchmarks)** | Full reports, raw traces, generation outputs, judgment scores, system prompts. Eight benchmark suites. CC BY 4.0. |
 | **[docs](https://github.com/ejentum/docs)** | Documentation pages. Quickstart to advanced method. Same content as [ejentum.com/docs](https://ejentum.com/docs). |
-| **[examples](https://github.com/ejentum/examples)** | Integration examples. Python, TypeScript, curl, MCP server, skill files, n8n workflow, no-code guides. MIT. |
+| **[examples](https://github.com/ejentum/examples)** | Integration examples. Python, TypeScript, curl, skill files, n8n workflow, no-code guides. MIT. |
 | **[builders_playbook](https://github.com/ejentum/builders_playbook)** | 28 screenshots from real work sessions. Field notes from inside the IDE. |
 
 ---
