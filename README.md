@@ -115,7 +115,7 @@ RAG retrieves information. Ejentum retrieves reasoning. Your agent already has t
 Chain-of-thought makes reasoning visible. Ejentum governs which reasoning steps to take and which failure modes to block. CoT says "show your work." Ejentum says "do this work, not that work." They are complementary. Use both.
 
 **Why not just use a stronger model?**
-We tested on Claude Opus 4.6 with maximum-effort extended thinking — the strongest reasoning model available. It scored 85.7% on hard competitive programming. Four tasks failed: two to reasoning spirals where the model thought for 600-1200 seconds and produced zero code. One API call per task fixed all four. The model had the knowledge. It lacked the convergence discipline. A stronger engine with uncalibrated steering still crashes.
+We tested on Claude Opus 4.6 with maximum-effort extended thinking. The strongest reasoning model available. It scored 85.7% on hard competitive programming. Four tasks failed: two to reasoning spirals where the model thought for 600-1200 seconds and produced zero code. One API call per task fixed all four. The model had the knowledge. It lacked the convergence discipline. A stronger engine with uncalibrated steering still crashes.
 
 ---
 
@@ -254,19 +254,33 @@ Based in Athens, Greece. Contact: [info@ejentum.com](mailto:info@ejentum.com).
 
 ## Integrate
 
-One REST endpoint. No SDK. Works with anything that can POST and inject text into a prompt.
+One REST endpoint, or a native package for your stack.
 
-| Environment | Example |
-|-------------|---------|
-| **Python** | [`basic.py`](https://github.com/ejentum/examples/blob/main/python/basic.py) |
-| **LangChain / LangGraph** | [`langchain_tool.py`](https://github.com/ejentum/examples/blob/main/python/langchain_tool.py) |
-| **OpenAI Agents SDK** | [`openai_agents_tool.py`](https://github.com/ejentum/examples/blob/main/python/openai_agents_tool.py) |
-| **Claude Agent SDK** | [`claude_agent_sdk.py`](https://github.com/ejentum/examples/blob/main/python/claude_agent_sdk.py) |
-| **MCP Server** (Cursor, Claude Code, Windsurf, Continue, Cline, n8n MCP node) | [**ejentum-mcp** on Smithery](https://smithery.ai/servers/ejentum/ejentum-mcp): `npx -y @smithery/cli install ejentum/ejentum-mcp --client claude` |
-| **Skill Files** (Cursor, Windsurf, Claude Code, Codex) | [`ejentum_logic_api.md`](https://github.com/ejentum/examples/blob/main/skill-files/ejentum_logic_api.md) |
-| **n8n** | [`ejentum_workflow.json`](https://github.com/ejentum/examples/blob/main/n8n/ejentum_workflow.json) |
-| **TypeScript** | [`basic.ts`](https://github.com/ejentum/examples/blob/main/typescript/basic.ts) |
-| **curl** | [`single.sh`](https://github.com/ejentum/examples/blob/main/curl/single.sh) |
+| Surface | Install | Notes |
+|---|---|---|
+| **MCP Server** (Cursor, Claude Code, Windsurf, Continue, Cline, n8n MCP node) | `npx -y ejentum-mcp` | Listed on Smithery, Glama, mcp.so, PulseMCP, Cline Marketplace, Continue Hub, Docker MCP Registry, mcpservers.org, and the official MCP Registry |
+| **Anthropic Claude Code plugin directory** | Install from the directory UI | Published 2026-05-22 |
+| **n8n community node** | `npm install n8n-nodes-ejentum` | Four operations as a native n8n node, `usableAsTool` for the n8n AI Agent |
+| **CrewAI** | `pip install crewai-ejentum` | `EjentumHarnessTool` with `mode` arg |
+| **Agno** | `pip install agno-ejentum` | `EjentumTools` Toolkit with four `harness_*` methods |
+| **PydanticAI** | `pip install pydantic-ai-ejentum` | `EjentumToolset(FunctionToolset)` with closure-based config |
+| **HuggingFace smolagents** | `pip install smolagents-ejentum` | Four `Tool` subclasses + `ejentum_tools()` factory |
+| **LangChain** | `pip install langchain-ejentum` | Four `BaseTool` subclasses + `EjentumTools` factory |
+| **Letta** | `pip install letta-ejentum` | Plain functions serialised for Letta's sandbox |
+| **Microsoft AutoGen** | `pip install autogen-ejentum` | Four async closures (httpx + respx tested) |
+| **Vercel AI SDK** | `npm install ejentum-ai` | Tool object factory for the AI SDK loop |
+| **Mastra** | `npm install ejentum-mastra` | Mastra tool definitions |
+| **LangGraph.js** | `npm install ejentum-langgraph` | Node factory for LangGraph graphs |
+| **Firebase Genkit** | `npm install ejentum-genkit` | `defineTool` registrations |
+| **OpenAI Agents SDK** (function tool) | [`openai_agents_tool.py`](https://github.com/ejentum/examples/blob/main/python/openai_agents_tool.py) | Single function tool for the Responses API |
+| **OpenAI Agents SDK** (MCP transport) | [`openai_agents_streamable_http.py`](https://github.com/ejentum/examples/blob/main/python/openai_agents_streamable_http.py) | Streamable-HTTP MCP transport variant |
+| **Anthropic Claude SDK** | [`claude_agent_sdk.py`](https://github.com/ejentum/examples/blob/main/python/claude_agent_sdk.py) | `tool_use` definition for Claude agents |
+| **Zed editor** | Install **Ejentum** from Zed Extensions | Rust + Wasm extension wrapping ejentum-mcp |
+| **Python** (custom integration) | [`basic.py`](https://github.com/ejentum/examples/blob/main/python/basic.py) | Minimal POST + inject |
+| **TypeScript** (custom integration) | [`basic.ts`](https://github.com/ejentum/examples/blob/main/typescript/basic.ts) | Minimal fetch + inject |
+| **Skill Files** (Cursor, Windsurf, Claude Code, Codex) | [`ejentum_logic_api.md`](https://github.com/ejentum/examples/blob/main/skill-files/ejentum_logic_api.md) | Drop in `~/.claude/skills/` |
+| **n8n workflow JSON** | [`ejentum_workflow.json`](https://github.com/ejentum/examples/blob/main/n8n/ejentum_workflow.json) | Importable visual workflow |
+| **curl** | [`single.sh`](https://github.com/ejentum/examples/blob/main/curl/single.sh) | Raw HTTP one-liner |
 
 All examples: **[ejentum/examples](https://github.com/ejentum/examples)**
 
@@ -305,7 +319,7 @@ We built injections to prevent reasoning shortcuts. We did not build them to tea
 
 **Spontaneous domain shift.** At step 15 of a 25-step ARC-AGI-3 spatial navigation game, the augmented agent stopped reasoning in natural language and switched to symbolic mathematical notation. It defined formal variables, computed coordinates algebraically, and reasoned about movement vectors. The suppression signal (`start_end_only_thinking`) constrained a failure mode. The agent found its own solution to that constraint. The suppression was the pressure. The math was the agent's adaptation.
 
-**Emergent query evolution.** The agent's queries to the Logic API improved systematically over 25 steps, from generic ("help me reason about this game") to spatially precise ("wall barrier at x=29-33 for rows 30-39 blocks rightward movement") to metacognitive ("robot appears stuck after 5 turns"). Nobody instructed query format or specificity. The agent learned to be a better user of reasoning infrastructure through practice, not instruction.
+**Emergent query evolution.** The agent's queries to the Logic API improved systematically over 25 steps, from generic ("help me reason about this game") to spatially precise ("wall barrier at x=29-33 for rows 30-39 blocks rightward movement") to metacognitive ("robot appears stuck after 5 turns"). Nobody instructed query format or specificity. The agent learned to be a better user of the reasoning harness through practice, not instruction.
 
 **The tense test.** In Memory Harness testing, a fact established in Turn 1 was implicitly walked back by Turn 19 without explicit correction. The baseline agent's scratchpad still said "Rust is their competitive advantage" (present tense). The augmented agent's said "Rust was initially considered their competitive advantage" (past tense). One word. The difference between accurate memory and stale memory.
 
@@ -345,11 +359,34 @@ We publish limitations because the work should be evaluated on what it demonstra
 | **[examples](https://github.com/ejentum/examples)** | Integration examples. Python, TypeScript, curl, skill files, n8n workflow, no-code guides. MIT. |
 | **[builders_playbook](https://github.com/ejentum/builders_playbook)** | 28 screenshots from real work sessions. Field notes from inside the IDE. |
 
+
+### Framework Packages
+
+Standalone packages on PyPI and npm, one per host framework. Each speaks the host framework's native idiom rather than mirroring the previous shim.
+
+| Package | Registry | Repo |
+|---|---|---|
+| `crewai-ejentum` | PyPI | [crewai-ejentum](https://github.com/ejentum/crewai-ejentum) |
+| `agno-ejentum` | PyPI | [agno-ejentum](https://github.com/ejentum/agno-ejentum) |
+| `pydantic-ai-ejentum` | PyPI | [pydantic-ai-ejentum](https://github.com/ejentum/pydantic-ai-ejentum) |
+| `smolagents-ejentum` | PyPI | [smolagents-ejentum](https://github.com/ejentum/smolagents-ejentum) |
+| `langchain-ejentum` | PyPI | [langchain-ejentum](https://github.com/ejentum/langchain-ejentum) |
+| `letta-ejentum` | PyPI | [letta-ejentum](https://github.com/ejentum/letta-ejentum) |
+| `autogen-ejentum` | PyPI | [autogen-ejentum](https://github.com/ejentum/autogen-ejentum) |
+| `llama-index-tools-ejentum` | GitHub (PyPI registration pending) | [llama-index-tools-ejentum](https://github.com/ejentum/llama-index-tools-ejentum) |
+| `ejentum-ai` | npm | [ejentum-ai](https://github.com/ejentum/ejentum-ai) |
+| `ejentum-mastra` | npm | [ejentum-mastra](https://github.com/ejentum/ejentum-mastra) |
+| `ejentum-langgraph` | npm | [ejentum-langgraph](https://github.com/ejentum/ejentum-langgraph) |
+| `ejentum-genkit` | npm | [ejentum-genkit](https://github.com/ejentum/ejentum-genkit) |
+| `n8n-nodes-ejentum` | npm | [n8n-nodes-ejentum](https://github.com/ejentum/n8n-nodes-ejentum) |
+
+Plus the [`integrations`](https://github.com/ejentum/integrations) repo (n8n workflows + editor skill files) and [`zed-ejentum-mcp`](https://github.com/ejentum/zed-ejentum-mcp) (Zed extension).
+
 ---
 
 <div align="center">
 
-**Ejentum.** Cognitive infrastructure for agentic AI.
+**Ejentum.** Reasoning Harness for Agentic AI.
 
 Where RAG retrieves what the model should know, RA²R retrieves how it should think.
 
