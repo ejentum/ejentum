@@ -19,23 +19,29 @@ Your agent is fluent. It's also confident when it shouldn't be, stops at the fir
 
 **Ejentum exists because the reasoning gap is structural, not informational.** RAG solved what models know. Nobody solved how they think. We built for that.
 
-**RA²R** (Reasoning Ability-Augmented Retrieval) retrieves engineered cognitive operations (not documents, not facts) and injects them into an LLM's context at inference time. 679 abilities across four product layers. One API call. The model's next output reflects a different reasoning structure before the first token generates.
+**RA²R** (Reasoning Ability-Augmented Retrieval) retrieves engineered cognitive operations (not documents, not facts) and injects them into an LLM's context at inference time. 679 operations across four harnesses. One API call. The model's next output reflects a different reasoning structure before the first token generates.
 
 ---
 
-## The Logic API
+## The Ejentum API
 
-Your agent sends a task description. The Logic API returns a structured cognitive injection:
+Your agent sends a task description. The Ejentum API returns a structured cognitive injection with six labeled blocks:
 
-- **Negative Gate:** the failure pattern to avoid, stated as a concrete scenario the model recognizes
-- **Suppression Signals:** named cognitive shortcuts to block (e.g., `surface_level_stop`, `single_variable_fixation`)
-- **Reasoning Topology:** the execution structure: steps, decision gates, loops, exit conditions
-- **Falsification Test:** the verification criterion the model checks its output against
+- **PROCEDURE:** the natural-language steps the model should follow
+- **REASONING TOPOLOGY:** the same procedure as an executable DAG (Sn:steps, Gn{gates}, M{meta-nodes}, FREEFORM{exits})
+- **COGNITIVE PAYLOAD:** named signals — `Amplify:` to activate, `Suppress:` to block, plus cognitive style and elasticity
+- **FALSIFICATION TEST:** the verification criterion the model checks its output against
+- **NEGATIVE GATE:** the failure pattern to avoid, stated as a concrete scenario the model recognizes
+- **TARGET PATTERN:** what correct reasoning looks like
 
 The injection is inserted into the agent's context window before the task. The suppression signals are the core mechanism. They constrain the model's output space multiplicatively: each named failure mode eliminates an entire branch of incorrect reasoning. In our testing, suppression consistently outperforms amplification alone.
 
+Two delivery modes per harness:
+- **Dynamic** — single retrieval. The highest-scoring operation comes back as-is. Predictable, fast.
+- **Adaptive** — top-k retrieval, then an adapter LLM rewrites the operation with task-specific identifiers from your query. The procedure steps and topology nodes reference YOUR problem, not the canonical example.
+
 ```bash
-curl -X POST "https://ejentum-main-ab125c3.zuplo.app/logicv1/" \
+curl -X POST "https://api.ejentum.com/harness/" \
   -H "Authorization: Bearer YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -47,10 +53,6 @@ curl -X POST "https://ejentum-main-ab125c3.zuplo.app/logicv1/" \
 ### What comes back
 
 ```
-[NEGATIVE GATE]
-The sales increase is attributed to the new marketing campaign, ignoring
-correlated economic factors and treatment spillover.
-
 [PROCEDURE]
 Step 1: Identify the intervention, variable, or agent whose impact is being
 attributed. Step 2: Simulate the counterfactual world where ONLY that element
@@ -73,40 +75,53 @@ N{accept_attribution_based_correlation_alone} → FORK:
                                 --yes→ OUT:confirmed_impact
                                 --no→ REJECT:proxy_for_correlated_var
 
+[COGNITIVE PAYLOAD]
+Amplify: potential outcomes simulation; counterfactual world construction; SUTVA enforcement
+Suppress: correlation based attribution; shared variance credit diffusion
+Cognitive Style: counterfactual reasoning
+Elasticity: coherence=optimal isolation, expansion=adversarial perturbation
+
 [FALSIFICATION TEST]
 If the effect of a specific variable is estimated without verifying
 controlling for correlated co-variables, impact isolation was not performed.
 
-Amplify: potential outcomes simulation; counterfactual world construction;
-         SUTVA enforcement
-Suppress: correlation based attribution; shared variance credit diffusion
+[NEGATIVE GATE]
+The sales increase is attributed to the new marketing campaign, ignoring
+correlated economic factors and treatment spillover.
+
+[TARGET PATTERN]
+Apply potential-outcomes simulation: construct the counterfactual world
+where the intervention is absent, hold covariates at natural values,
+and verify that the measured effect survives SUTVA checks before
+accepting any causal claim.
 ```
 
 The agent absorbs this before answering. Instead of accepting "the redesign caused the drop" on temporal proximity alone, it constructs a counterfactual world where the redesign did not happen, checks whether other variables (traffic source, device mix, pricing, market conditions) shifted in the same window, and either confirms the impact or rejects the attribution as a proxy for a correlated variable.
 
-**Seven modes across four product layers:**
+**Eight modes across four harnesses:**
 
-| Mode | Product Layer | What it returns | Best for |
-|------|--------------|----------------|----------|
-| **reasoning** | Reasoning Harness | One cognitive operation from 311 abilities | Focused, single-domain reasoning tasks |
-| **reasoning-multi** | Reasoning Harness | Primary + cross-domain failure guards + self-check | Complex, cross-domain analysis |
-| **code** | Code Harness | One engineering operation from 128 abilities | Code generation, refactoring, architecture |
-| **code-multi** | Code Harness | Primary + cross-domain engineering guards | Multi-file changes, system design |
-| **anti-deception** | Anti-Deception Harness | One protective operation from 139 abilities | Sycophancy, hallucination, prompt injection prevention |
-| **memory** | Memory Harness | One perceptual operation from 101 abilities | State tracking, perception sharpening, observation depth |
-| **memory-multi** | Memory Harness | Primary + cross-domain perceptual guards | Multi-turn drift monitoring, complex behavioral calibration |
+| Mode | Harness | Delivery | Best for |
+|------|---------|----------|----------|
+| **reasoning** | Reasoning Harness | Dynamic | Single-domain reasoning, predictable injection cost |
+| **adaptive-reasoning** | Reasoning Harness | Adaptive | Task-specific reasoning with named entities, variables, constraints |
+| **code** | Code Harness | Dynamic | Code generation, refactoring, architecture |
+| **adaptive-code** | Code Harness | Adaptive | Multi-file changes where the operation needs to reference specific symbols |
+| **anti-deception** | Anti-Deception Harness | Dynamic | Sycophancy, hallucination, prompt injection prevention |
+| **adaptive-anti-deception** | Anti-Deception Harness | Adaptive | Targeted attack-surface protection for a specific prompt or domain |
+| **memory** | Memory Harness | Dynamic | State tracking, perception sharpening |
+| **adaptive-memory** | Memory Harness | Adaptive | Multi-turn drift monitoring against named anchor concepts |
 
-Retrieval under 1 second. Deterministic. No LLM inference on our side. If the API is unreachable, your agent continues on native reasoning. Enhancement, not dependency.
+Retrieval under 1 second for dynamic, a few seconds for adaptive (one adapter-LLM round-trip). If the API is unreachable, your agent continues on native reasoning. Enhancement, not dependency.
 
 ---
 
 ## Why not just...
 
 **Why not just write better prompts?**
-Prompt engineering is O(n) work. Every new scenario needs a new prompt. Every model update risks breaking what worked. Ejentum selects from 679 cognitive abilities across 4 product layers at runtime. Zero prompt maintenance. One API call adapts to any task.
+Prompt engineering is O(n) work. Every new scenario needs a new prompt. Every model update risks breaking what worked. Ejentum selects from 679 cognitive operations across 4 harnesses at runtime. Zero prompt maintenance. One API call adapts to any task.
 
 **Why not fine-tune?**
-Fine-tuning burns reasoning into weights. It costs weeks, requires training data per domain, and must be repeated when the base model updates. Scaffolding operates at the prompt level. No training, no data collection, no retraining cycle. Deploy in minutes, not months.
+Fine-tuning burns reasoning into weights. It costs weeks, requires training data per domain, and must be repeated when the base model updates. The reasoning harness operates at the prompt level. No training, no data collection, no retraining cycle. Deploy in minutes, not months.
 
 **Why not RAG?**
 RAG retrieves information. Ejentum retrieves reasoning. Your agent already has the data. The problem is how it thinks about that data. RAG gives the agent more to read. Ejentum gives it a better way to think. Use both.
@@ -121,11 +136,11 @@ We tested on Claude Opus 4.6 with maximum-effort extended thinking. The stronges
 
 ## Four Product Layers
 
-### Reasoning Harness: 311 abilities, 6 cognitive dimensions
+### Reasoning Harness: 311 operations, 6 cognitive dimensions
 
-The original product. Prevents reasoning decay across extended execution chains. Each ability is a structured protocol with an execution topology, suppression vectors, amplification signals, and graph edges connecting it to other abilities. Organized by class of cognitive failure, not by subject matter.
+The original product. Addresses reasoning failures across extended execution chains. Each operation is a structured protocol with an execution topology, suppression vectors, amplification signals, and graph edges connecting it to other operations. Organized by class of cognitive failure, not by subject matter.
 
-| Dimension | Abilities | The failure it addresses |
+| Dimension | Operations | The failure it addresses |
 |-----------|----------|--------------------------|
 | **Causality** | 52 | Reverses the direction of causation. Treats correlation as mechanism. |
 | **Temporal** | 51 | Compresses time. Confabulates timelines. Anchors to optimistic durations. |
@@ -134,7 +149,7 @@ The original product. Prevents reasoning decay across extended execution chains.
 | **Abstraction** | 51 | Collapses categories. Specifics absorb into generalities. Metaphor becomes mechanism. |
 | **Metacognition** | 54 | Doesn't know it's wrong. Confidence is uniform. Errors reinforce errors. |
 
-### Anti-Deception Harness: 139 abilities, 6 protective domains
+### Anti-Deception Harness: 139 operations, 6 protective domains
 
 Blocks sycophancy, hallucination, social engineering, and prompt injection. Tested cross-model on GPT-4o.
 
@@ -142,14 +157,14 @@ Blocks sycophancy, hallucination, social engineering, and prompt injection. Test
 - **Adversarial social engineering:** Detected at Turn 6 in a 20-turn adaptive attack. 27/30 blind evaluation
 - **Hallucination prevention:** Zero hallucinations across 5 fabrication tests
 
-### Code Harness: 128 abilities, 13 engineering disciplines
+### Code Harness: 128 operations, 13 engineering disciplines
 
 Engineering operations for code generation, refactoring, security auditing, and architecture. Tested on competitive programming and scientific computing.
 
 - **LiveCodeBench Hard:** 85.7% to 100% on 28 hard AtCoder tasks. Zero regressions
 - **SciCode:** Zero bugs on 10 hard scientific computing problems with dual injection (reasoning + code stacked)
 
-### Memory Harness: 101 abilities, 6 perceptual domains
+### Memory Harness: 101 operations, 6 perceptual domains
 
 Perception sharpening and behavioral calibration. The model detects what changed, not just what was said. Two-pass protocol: observe first (free perception), then sharpen (focused injection).
 
@@ -157,7 +172,7 @@ Perception sharpening and behavioral calibration. The model detects what changed
 - **Perceptual detection:** 3x signal detection rate in coaching conversations
 - **Blind evaluation:** 4.1/5 vs 3.5/5. The evaluator independently named the core insight: *"Retention without updating is a liability"*
 
-Browse all 679 abilities: [ejentum.com/abilities](https://ejentum.com/abilities)
+Browse all 679 operations: [ejentum.com/abilities](https://ejentum.com/abilities)
 
 ---
 
@@ -169,7 +184,7 @@ Browse all 679 abilities: [ejentum.com/abilities](https://ejentum.com/abilities)
 - **ELEPHANT sycophancy: 5.8% composite** across 40 real Reddit scenarios. Cross-model validated on GPT-4o.
 - **Memory state tracking: 50% fewer stale facts** served as current across 20-turn conversations. Blind eval 4.1/5 vs 3.5/5.
 
-Eight benchmarks across four product layers. Two-stage blind protocol on reasoning and memory. Exact-match on code. Cross-model validation on anti-deception and memory (GPT-4o). Source data for every number is in the [benchmarks repo](https://github.com/ejentum/benchmarks).
+Eight benchmarks across four harnesses. Two-stage blind protocol on reasoning and memory. Exact-match on code. Cross-model validation on anti-deception and memory (GPT-4o). Source data for every number is in the [benchmarks repo](https://github.com/ejentum/benchmarks).
 
 ### Code Harness (external, binary correctness)
 
@@ -178,7 +193,7 @@ Eight benchmarks across four product layers. Two-stage blind protocol on reasoni
 | Condition | Passed | Rate |
 |-----------|--------|------|
 | Baseline (Opus max effort) | 24/28 | 85.7% |
-| **With Logic API injection** | **28/28** | **100.0%** |
+| **With Ejentum injection** | **28/28** | **100.0%** |
 
 **+14.3pp. Four tasks gained. Zero lost. Zero regressions across three independent batches.**
 
@@ -244,7 +259,7 @@ Full reports, raw traces, generation outputs, judgment scores: **[ejentum/benchm
 
 ## Built by one person
 
-Ejentum is built by Frank Brsrk (Franko Luci). Self-taught AI developer. Solo founder. One person engineering the abilities, running the benchmarks, shipping the system.
+Ejentum is built by Frank Brsrk (Franko Luci). Self-taught AI developer. Solo founder. One person engineering the operations, running the benchmarks, shipping the system.
 
 When results disappoint, they're published alongside the improvements. When the most complex mode underperformed the simplest one, it was deprecated and documented. When 62% of tasks received the wrong reasoning domain and improvements persisted anyway, that was published too, because the finding was more valuable than the embarrassment.
 
@@ -254,20 +269,20 @@ Based in Athens, Greece. Contact: [info@ejentum.com](mailto:info@ejentum.com).
 
 ## Integrate
 
-One REST endpoint, or a native package for your stack.
+One REST endpoint, or a native package for your stack. Each shim exposes 8 tools (4 harnesses × dynamic + adaptive).
 
 | Surface | Install | Notes |
 |---|---|---|
 | **MCP Server** (Cursor, Claude Code, Windsurf, Continue, Cline, n8n MCP node) | `npx -y ejentum-mcp` | Listed on Smithery, Glama, mcp.so, PulseMCP, Cline Marketplace, Continue Hub, Docker MCP Registry, mcpservers.org, and the official MCP Registry |
 | **Anthropic Claude Code plugin directory** | Install from the directory UI | Published 2026-05-22 |
-| **n8n community node** | `npm install n8n-nodes-ejentum` | Four operations as a native n8n node, `usableAsTool` for the n8n AI Agent |
+| **n8n community node** | `npm install n8n-nodes-ejentum` | 8 operations as a native n8n node, `usableAsTool` for the n8n AI Agent |
 | **CrewAI** | `pip install crewai-ejentum` | `EjentumHarnessTool` with `mode` arg |
-| **Agno** | `pip install agno-ejentum` | `EjentumTools` Toolkit with four `harness_*` methods |
+| **Agno** | `pip install agno-ejentum` | `EjentumTools` Toolkit with 8 methods |
 | **PydanticAI** | `pip install pydantic-ai-ejentum` | `EjentumToolset(FunctionToolset)` with closure-based config |
-| **HuggingFace smolagents** | `pip install smolagents-ejentum` | Four `Tool` subclasses + `ejentum_tools()` factory |
-| **LangChain** | `pip install langchain-ejentum` | Four `BaseTool` subclasses + `EjentumTools` factory |
-| **Letta** | `pip install letta-ejentum` | Plain functions serialised for Letta's sandbox |
-| **Microsoft AutoGen** | `pip install autogen-ejentum` | Four async closures (httpx + respx tested) |
+| **HuggingFace smolagents** | `pip install smolagents-ejentum` | 8 `Tool` subclasses + `ejentum_tools()` factory |
+| **LangChain** | `pip install langchain-ejentum` | 8 `BaseTool` subclasses + `EjentumTools` factory |
+| **Letta** | `pip install letta-ejentum` | 8 plain functions serialised for Letta's sandbox |
+| **Microsoft AutoGen** | `pip install autogen-ejentum` | 8 async closures (httpx + respx tested) |
 | **Vercel AI SDK** | `npm install ejentum-ai` | Tool object factory for the AI SDK loop |
 | **Mastra** | `npm install ejentum-mastra` | Mastra tool definitions |
 | **LangGraph.js** | `npm install ejentum-langgraph` | Node factory for LangGraph graphs |
@@ -278,7 +293,7 @@ One REST endpoint, or a native package for your stack.
 | **Zed editor** | Install **Ejentum** from Zed Extensions | Rust + Wasm extension wrapping ejentum-mcp |
 | **Python** (custom integration) | [`basic.py`](https://github.com/ejentum/examples/blob/main/python/basic.py) | Minimal POST + inject |
 | **TypeScript** (custom integration) | [`basic.ts`](https://github.com/ejentum/examples/blob/main/typescript/basic.ts) | Minimal fetch + inject |
-| **Skill Files** (Cursor, Windsurf, Claude Code, Codex) | [`ejentum_logic_api.md`](https://github.com/ejentum/examples/blob/main/skill-files/ejentum_logic_api.md) | Drop in `~/.claude/skills/` |
+| **Skill Files** (Cursor, Windsurf, Claude Code, Codex) | [skill files](https://github.com/ejentum/examples/tree/main/skill-files) | Drop in `~/.claude/skills/` |
 | **n8n workflow JSON** | [`ejentum_workflow.json`](https://github.com/ejentum/examples/blob/main/n8n/ejentum_workflow.json) | Importable visual workflow |
 | **curl** | [`single.sh`](https://github.com/ejentum/examples/blob/main/curl/single.sh) | Raw HTTP one-liner |
 
@@ -288,28 +303,27 @@ All examples: **[ejentum/examples](https://github.com/ejentum/examples)**
 
 ## Production Considerations
 
-Ejentum is designed as a non-critical enhancement layer. The Logic API sits outside your agent's critical path: if it's unreachable, your agent continues on native reasoning.
+Ejentum is designed as a non-critical enhancement layer. The Ejentum API sits outside your agent's critical path: if it's unreachable, your agent continues on native reasoning.
 
 - **Graceful degradation is first-class.** On timeout, 5xx, or rate limit, your agent continues on native reasoning. The API never blocks agent execution. See [graceful_degradation.py](https://github.com/ejentum/examples/blob/main/python/graceful_degradation.py) for the production pattern.
-- **Recommended timeout:** 5 seconds.
+- **Recommended timeout:** 5 seconds for dynamic modes, 15 seconds for adaptive modes (adapter LLM adds a round-trip).
 - **Rate limit:** 100 requests/minute across all tiers.
 - **Cost impact:** injection adds ~400–900 tokens to each augmented LLM call. This adds cost to your LLM bill; size depends on your model provider's rates.
-- **Data handling:** task descriptions sent via the `query` parameter are processed for ability retrieval only. EU hosting. Contact [info@ejentum.com](mailto:info@ejentum.com) for data processing questions.
+- **Data handling:** task descriptions sent via the `query` parameter are processed for operation retrieval only. EU hosting. Contact [info@ejentum.com](mailto:info@ejentum.com) for data processing questions.
 
 ---
 
 ## Pricing
 
-| | Free | Ki | Haki | Enterprise |
-|---|---|---|---|---|
-| **Price** | Free | €19/mo | €49/mo | Custom |
-| **Calls** | 100 total | 5,000/mo | 10,000/mo | Unlimited |
-| **Modes** | All single modes | All single modes | All modes (single + multi) | All + custom abilities |
-| **Rate** | 100/min | 100/min | 100/min | Custom |
+| | Free trial | Go | Super |
+|---|---|---|---|
+| **Price** | Free (30 days) | €5/month | €25/month |
+| **Dynamic calls** | 1,000 (trial total) | 1,000/month | 5,000/month |
+| **Adaptive calls** | — | 250/month | 1,500/month |
+| **Modes** | Dynamic reasoning only | All 8 modes | All 8 modes |
+| **Rate** | 100/min | 100/min | 100/min |
 
-**Enterprise** adds private deployment / dedicated instance, custom ability engineering for your domain, and SLA + dedicated support. [Contact for Enterprise](mailto:info@ejentum.com).
-
-No card required for free tier. [Get your API key](https://ejentum.com/dashboard).
+No card required for the 30-day trial. [Get your API key](https://ejentum.com/dashboard) · [Full pricing](https://ejentum.com/pricing).
 
 ---
 
@@ -319,7 +333,7 @@ We built injections to prevent reasoning shortcuts. We did not build them to tea
 
 **Spontaneous domain shift.** At step 15 of a 25-step ARC-AGI-3 spatial navigation game, the augmented agent stopped reasoning in natural language and switched to symbolic mathematical notation. It defined formal variables, computed coordinates algebraically, and reasoned about movement vectors. The suppression signal (`start_end_only_thinking`) constrained a failure mode. The agent found its own solution to that constraint. The suppression was the pressure. The math was the agent's adaptation.
 
-**Emergent query evolution.** The agent's queries to the Logic API improved systematically over 25 steps, from generic ("help me reason about this game") to spatially precise ("wall barrier at x=29-33 for rows 30-39 blocks rightward movement") to metacognitive ("robot appears stuck after 5 turns"). Nobody instructed query format or specificity. The agent learned to be a better user of the reasoning harness through practice, not instruction.
+**Emergent query evolution.** The agent's queries to Ejentum improved systematically over 25 steps, from generic ("help me reason about this game") to spatially precise ("wall barrier at x=29-33 for rows 30-39 blocks rightward movement") to metacognitive ("robot appears stuck after 5 turns"). Nobody instructed query format or specificity. The agent learned to be a better user of the reasoning harness through practice, not instruction.
 
 **The tense test.** In Memory Harness testing, a fact established in Turn 1 was implicitly walked back by Turn 19 without explicit correction. The baseline agent's scratchpad still said "Rust is their competitive advantage" (present tense). The augmented agent's said "Rust was initially considered their competitive advantage" (past tense). One word. The difference between accurate memory and stale memory.
 
@@ -331,8 +345,8 @@ These are observations from traced data, not marketing claims. Full step-by-step
 
 **What the data demonstrates:**
 - Structured cognitive injection produces measurable behavioral changes across eight independent benchmarks, multiple model sizes, and single-turn, multi-step, code generation, anti-deception, and memory settings.
-- Suppression signals work even when the retrieved ability comes from a mismatched domain (retrieval precision was 38%; improvements persisted).
-- Injections persist across extended execution chains (half-life: 24 steps) and compound rather than decay.
+- Suppression signals work even when the retrieved operation comes from a mismatched domain (retrieval precision was 38%; improvements persisted).
+- Injections persist across extended execution chains (half-life: 24 steps) and compound rather than degrade.
 - On competitive programming, the injection improved correctness from 85.7% to 100% with zero regressions.
 - On scientific computing, dual injection (reasoning + code stacked) eliminated all 7 correctness bugs.
 - On sycophancy, the injection reduced composite sycophancy to 5.8% across 40 real scenarios, validated cross-model on GPT-4o.
@@ -351,7 +365,7 @@ We publish limitations because the work should be evaluated on what it demonstra
 
 | Repo | What's inside |
 |------|--------------|
-| **[ejentum-mcp](https://github.com/ejentum/ejentum-mcp)** | MCP server exposing the four cognitive harnesses as MCP tools. One-click install via [Smithery](https://smithery.ai/servers/ejentum/ejentum-mcp), [Glama](https://glama.ai/mcp/servers/ejentum/ejentum-mcp), or [mcp.so](https://mcp.so/server/ejentum-mcp/Ejentum). MIT. |
+| **[ejentum-mcp](https://github.com/ejentum/ejentum-mcp)** | MCP server exposing 8 cognitive operations (4 harnesses × dynamic + adaptive) as MCP tools. One-click install via [Smithery](https://smithery.ai/servers/ejentum/ejentum-mcp), [Glama](https://glama.ai/mcp/servers/ejentum/ejentum-mcp), or [mcp.so](https://mcp.so/server/ejentum-mcp/Ejentum). MIT. |
 | **[agent-teams](https://github.com/ejentum/agent-teams)** | Multi-agent teams (orchestrator + specialists, each with a mode-specific harness). Adversarial code review and eval workflows shipped. MIT. |
 | **[eval](https://github.com/ejentum/eval)** | Open-source eval workflows (n8n + Python) for A/B testing tools, harnesses, prompts. Blind judges, fairness guarantees, sample results. MIT. |
 | **[benchmarks](https://github.com/ejentum/benchmarks)** | Full reports, raw traces, generation outputs, judgment scores, system prompts. Eight benchmark suites. CC BY 4.0. |
@@ -362,7 +376,7 @@ We publish limitations because the work should be evaluated on what it demonstra
 
 ### Framework Packages
 
-Standalone packages on PyPI and npm, one per host framework. Each speaks the host framework's native idiom rather than mirroring the previous shim.
+Standalone packages on PyPI and npm, one per host framework. Each speaks the host framework's native idiom rather than mirroring the previous shim. Each ships 8 tools (4 harnesses × dynamic + adaptive).
 
 | Package | Registry | Repo |
 |---|---|---|
