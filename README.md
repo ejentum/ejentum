@@ -21,7 +21,7 @@ Your agent is fluent. It's also confident when it shouldn't be, stops at the fir
 
 **Ejentum exists because the reasoning gap is structural, not informational.** RAG solved what models know. Nobody solved how they think. We built for that.
 
-**RA²R** (Reasoning Ability-Augmented Retrieval) retrieves engineered cognitive operations (not documents, not facts) and injects them into an LLM's context at inference time. 679 operations across four harnesses. One API call. The model's next output reflects a different reasoning structure before the first token generates.
+**RA²R** (Reasoning Ability-Augmented Retrieval) retrieves engineered cognitive operations (not documents, not facts) and injects them into an LLM's context at inference time. 679 operations across four harnesses. One API call. The model's next output reflects a different reasoning structure, absorbed before it commits to an answer.
 
 ---
 
@@ -132,7 +132,7 @@ RAG retrieves information. Ejentum retrieves reasoning. Your agent already has t
 Chain-of-thought makes reasoning visible. Ejentum governs which reasoning steps to take and which failure modes to block. CoT says "show your work." Ejentum says "do this work, not that work." They are complementary. Use both.
 
 **Why not just use a stronger model?**
-We tested on Claude Opus 4.6 with maximum-effort extended thinking. The strongest reasoning model available. It scored 85.7% on hard competitive programming. Four tasks failed: two to reasoning spirals where the model thought for 600-1200 seconds and produced zero code. One API call per task fixed all four. The model had the knowledge. It lacked the convergence discipline. A stronger engine with uncalibrated steering still crashes.
+We tested on Claude Opus 4.6 with maximum-effort extended thinking, the strongest reasoning model available at the time. It scored 85.7% on hard competitive programming. Four tasks failed: two to reasoning spirals where the model thought for 600-1200 seconds and produced zero code. One API call per task fixed all four. The model had the knowledge. It lacked the convergence discipline. A stronger engine with uncalibrated steering still crashes.
 
 ---
 
