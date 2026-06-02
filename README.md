@@ -25,6 +25,12 @@ Your agent is fluent. It's also confident when it shouldn't be, stops at the fir
 
 ## The Ejentum API
 
+<div align="center">
+<img src="how_it_works.png" width="100%" />
+<br/>
+<sub>A tool your agent calls mid-loop, wired in next to its model and memory.</sub>
+</div>
+
 Your agent sends a task description. The Ejentum API returns a structured cognitive injection with six labeled blocks:
 
 - **PROCEDURE:** the natural-language steps the model should follow
