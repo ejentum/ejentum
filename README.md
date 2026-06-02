@@ -155,6 +155,15 @@ The original product. Addresses reasoning failures across extended execution cha
 
 Blocks sycophancy, hallucination, social engineering, and prompt injection. Tested cross-model on GPT-4o.
 
+| Domain | Operations | The failure it addresses |
+|--------|-----------|--------------------------|
+| **Anti-Sycophancy** | 37 | Agrees when disagreement is warranted. Validates without evaluating. Softens to avoid discomfort. |
+| **Anti-Hallucination** | 33 | Fabricates citations, statistics, entities. Presents uncertainty as certainty. |
+| **Anti-Deception** | 30 | Omits relevant information. Frames to serve an agenda. Substitutes a proxy goal for the real one. |
+| **Anti-Adversarial** | 28 | Complies with social engineering. Discloses protected data under pressure. Accepts forged authority. |
+| **Anti-Judgment** | 6 | Bias in evaluation. Inconsistent scoring. Irrelevant factors swaying the assessment. |
+| **Anti-Evasion** | 5 | Deflects hard questions. Non-answers that sound responsive. Complexity as camouflage. |
+
 - **ELEPHANT sycophancy benchmark:** 5.8% composite sycophancy across 40 real Reddit scenarios
 - **Adversarial social engineering:** Detected at Turn 6 in a 20-turn adaptive attack. 27/30 blind evaluation
 - **Hallucination prevention:** Zero hallucinations across 5 fabrication tests
@@ -163,12 +172,37 @@ Blocks sycophancy, hallucination, social engineering, and prompt injection. Test
 
 Engineering operations for code generation, refactoring, security auditing, and architecture. Tested on competitive programming and scientific computing.
 
+| Discipline | The failure it addresses |
+|-----------|--------------------------|
+| **Debugging & Diagnostics** | Wrong root cause. Fixes the symptom. Misreads the stack trace. (largest discipline) |
+| **Code Generation** | Code that compiles but is logically wrong. |
+| **Testing & Verification** | Ships unverified code. Misses the edge case. |
+| **Architecture** | Components that work alone but don't connect. |
+| **Performance & Optimization** | Premature micro-optimization, or O(n³) where O(n log n) exists. |
+| **Quality & Standards** | "Impressive" code instead of maintainable code. |
+| **Security Reasoning** | Credential leaks, broken auth boundaries, injection (8 abilities). |
+| **Agent Safety** | Hallucinated APIs, over-generation, credential sprawl. |
+| **Error Handling & Resilience** | Silently swallowed errors. No recovery path. |
+| **API Grounding** | Calls methods and parameters that don't exist in the library. |
+| **DevOps & Infrastructure** | Assumes the wrong environment. Breaks deploy/CI config. |
+| **Frontend** | Broken UI state, lifecycle, and rendering. |
+| **Context & Attention Management** | Loses constraints and prior decisions across long sessions. |
+
 - **LiveCodeBench Hard:** 85.7% to 100% on 28 hard AtCoder tasks. Zero regressions
 - **SciCode:** Zero bugs on 10 hard scientific computing problems with dual injection (reasoning + code stacked)
 
 ### Memory Harness: 101 operations, 6 perceptual domains
 
 Perception sharpening and behavioral calibration. The model detects what changed, not just what was said. Two-pass protocol: observe first (free perception), then sharpen (focused injection).
+
+| Domain | Operations | The failure it addresses |
+|--------|-----------|--------------------------|
+| **Signal Detection** | 21 | Processes content but not delivery. Dismisses tone and style shifts. |
+| **Interpersonal** | 24 | Treats every user the same. Misses shifts in motivation, trust, and power. |
+| **Memory Operations** | 16 | Serves outdated facts as current. Memory that adds but never corrects. |
+| **Self-Monitoring** | 15 | Doesn't notice its own output quality declining over turns. |
+| **Risk Awareness** | 15 | Dismisses subtle risk signals. Underweights high-stakes indicators. |
+| **Decision** | 10 | Acts on stale context. Commits without verifying current state. |
 
 - **State tracking:** 50% fewer stale facts served as current across 20-turn conversations
 - **Perceptual detection:** 3x signal detection rate in coaching conversations
