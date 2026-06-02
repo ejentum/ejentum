@@ -1,6 +1,8 @@
 <div align="center">
 
-<img src="ejentum_banner1.png?v=2" width="100%" />
+<img src="how_it_works.png" width="100%" />
+<br/>
+<sub>A tool your agent calls mid-loop, wired in next to its model and memory.</sub>
 
 [![Website](https://img.shields.io/badge/ejentum.com-0B1121?style=for-the-badge&logo=googlechrome&logoColor=ff4d6a)](https://ejentum.com)
 [![Docs](https://img.shields.io/badge/Documentation-0B1121?style=for-the-badge&logo=readthedocs&logoColor=10b981)](https://ejentum.com/docs)
@@ -24,12 +26,6 @@ Your agent is fluent. It's also confident when it shouldn't be, stops at the fir
 ---
 
 ## The Ejentum API
-
-<div align="center">
-<img src="how_it_works.png" width="100%" />
-<br/>
-<sub>A tool your agent calls mid-loop, wired in next to its model and memory.</sub>
-</div>
 
 Your agent sends a task description. The Ejentum API returns a structured cognitive injection with six labeled blocks:
 
