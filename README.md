@@ -309,7 +309,7 @@ One REST endpoint, or a native package for your stack. Each shim exposes 8 tools
 
 | Surface | Install | Notes |
 |---|---|---|
-| **MCP Server** (Cursor, Claude Code, Windsurf, Continue, Cline, n8n MCP node) | `npx -y ejentum-mcp` | Listed on Smithery, Glama, mcp.so, PulseMCP, Cline Marketplace, Continue Hub, Docker MCP Registry, mcpservers.org, and the official MCP Registry |
+| **MCP Server** (Cursor, Claude Code, Windsurf, Continue, Cline, n8n MCP node) | `npx -y ejentum-mcp` | Listed on Glama, mcp.so, PulseMCP, Cline Marketplace, Continue Hub, Docker MCP Registry, mcpservers.org, and the official MCP Registry |
 | **Anthropic Claude Code plugin directory** | Install from the directory UI | Published 2026-05-22 |
 | **n8n community node** | `npm install n8n-nodes-ejentum` | 8 operations as a native n8n node, `usableAsTool` for the n8n AI Agent |
 | **CrewAI** | `pip install crewai-ejentum` | `EjentumHarnessTool` with `mode` arg |
@@ -401,7 +401,7 @@ We publish limitations because the work should be evaluated on what it demonstra
 
 | Repo | What's inside |
 |------|--------------|
-| **[ejentum-mcp](https://github.com/ejentum/ejentum-mcp)** | MCP server exposing 8 cognitive operations (4 harnesses × dynamic + adaptive) as MCP tools. One-click install via [Smithery](https://smithery.ai/servers/ejentum/ejentum-mcp), [Glama](https://glama.ai/mcp/servers/ejentum/ejentum-mcp), or [mcp.so](https://mcp.so/server/ejentum-mcp/Ejentum). MIT. |
+| **[ejentum-mcp](https://github.com/ejentum/ejentum-mcp)** | MCP server exposing 8 cognitive operations (4 harnesses × dynamic + adaptive) as MCP tools. Listed on [Glama](https://glama.ai/mcp/servers/ejentum/ejentum-mcp) and [mcp.so](https://mcp.so/server/ejentum-mcp/Ejentum). MIT. |
 | **[agent-teams](https://github.com/ejentum/agent-teams)** | Multi-agent teams (orchestrator + specialists, each with a mode-specific harness). Adversarial code review and eval workflows shipped. MIT. |
 | **[eval](https://github.com/ejentum/eval)** | Open-source eval workflows (n8n + Python) for A/B testing tools, harnesses, prompts. Blind judges, fairness guarantees, sample results. MIT. |
 | **[benchmarks](https://github.com/ejentum/benchmarks)** | Full reports, raw traces, generation outputs, judgment scores, system prompts. Eight benchmark suites. CC BY 4.0. |
